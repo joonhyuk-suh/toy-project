@@ -1,0 +1,261 @@
+# 노트 이름(Scento 표기)|한국어 이름|음식·일상 비유|계열 id
+Bergamot|베르가못|얼그레이 속 상큼한 껍질|citrus
+Mandarin|만다린|손으로 깐 귤 껍질|citrus
+Lemon|레몬|갓 짠 레몬즙|citrus
+Orange|오렌지|오렌지 껍질을 벗길 때 튀는 향|citrus
+Grapefruit|자몽|쌉싸름한 자몽 과육|citrus
+Lime|라임|모히토 위에 얹은 라임 조각|citrus
+Citrus|시트러스|상큼한 감귤류 한 바구니|citrus
+Blood Orange|블러드 오렌지|붉은 오렌지 주스|citrus
+Bitter orange|비터 오렌지|쌉쌀한 오렌지 마멀레이드|citrus
+Petitgrain|쁘티그레인|귤나무 잎을 비빈 향|citrus
+Yuzu|유자|유자차 속 유자 껍질|citrus
+Cedrat|시트론|두툼한 레몬 껍질|citrus
+Neroli|네롤리|오렌지 꽃에서 얻은 맑은 향|citrus
+Verbena|버베나|레몬 향이 나는 허브티|citrus
+Litsea|리트시아|레몬 껍질을 닮은 열매 향|citrus
+Apple|사과|아삭한 풋사과|fruit
+Peach|복숭아|말랑한 복숭아 과즙|fruit
+Pear|배|아삭한 배 한 조각|fruit
+Raspberry|라즈베리|새콤한 산딸기 잼|fruit
+Blackcurrant|블랙커런트|새콤달콤한 검은 베리 주스|fruit
+Plum|자두|새콤한 자두|fruit
+Pineapple|파인애플|잘 익은 파인애플|fruit
+Lychee|리치|달콤한 리치 과즙|fruit
+Strawberry|딸기|딸기우유 위의 생딸기|fruit
+Cherry|체리|새콤한 체리|fruit
+Mango|망고|잘 익은 망고 과육|fruit
+Passion fruit|패션프루트|새콤한 열대 과일|fruit
+Melon|멜론|시원한 멜론 한 조각|fruit
+Blackberry|블랙베리|진한 블랙베리 잼|fruit
+Rhubarb|루바브|새콤한 루바브 파이|fruit
+Apricot|살구|말랑한 살구|fruit
+Fruit|과일|싱그러운 과일 바구니|fruit
+Fig|무화과|잘 익은 무화과 속살|fruit
+Red berries|붉은 베리|새빨간 베리 믹스|fruit
+Wild berries|야생 베리|숲에서 딴 야생 열매|fruit
+Red currant|레드커런트|반짝이는 붉은 열매|fruit
+Pomegranate|석류|톡 터지는 석류알|fruit
+Dates|대추야자|쫀득한 대추야자|fruit
+Dried Fruits|말린 과일|말린 과일 믹스|fruit
+Candied fruits|설탕 절임 과일|설탕에 졸인 과일|fruit
+Tropical fruits|열대 과일|휴양지에서 마시는 과일 주스|fruit
+Dragon fruit|용과|은은하게 달콤한 용과|fruit
+Guava|구아바|향긋한 구아바 주스|fruit
+Nectarine|천도복숭아|탱탱한 천도복숭아|fruit
+Quince|모과|향긋한 모과차|fruit
+Blueberry|블루베리|톡 터지는 블루베리|fruit
+Red fruits|붉은 과일|잘 익은 붉은 과일|fruit
+Water fruits and flowers|물기 많은 과일과 꽃|시원한 과일 에이드|fruit
+Pomarose|포마로즈|사과와 장미를 섞은 향|fruit
+Davana|다바나|달콤한 허브와 과일의 중간 향|fruit
+Calone|칼론|바닷바람을 머금은 수박 향|fruit
+Tea|차|따뜻하게 우린 찻잎|green
+Mint|민트|갓 딴 민트 잎|green
+Sage|세이지|바싹 마른 허브 다발|green
+Clary Sage|클라리 세이지|은은한 허브 꽃|green
+Rosemary|로즈마리|고기 구울 때 넣는 허브|green
+Basil|바질|피자 위 바질 잎|green
+Thyme|타임|수프에 넣는 허브|green
+Green leaves|초록 잎|갓 딴 풀잎|green
+Galbanum|갈바넘|쌉싸름한 초록 줄기|green
+Cut Grass|풀 벤 향|잔디를 깎은 날의 향|green
+Artemisia|쑥|쌉싸름한 쑥|green
+Tarragon|타라곤|상큼한 허브 잎|green
+Absinthe|압생트|쌉쌀한 허브 술|green
+Lavender|라벤더|햇볕에 말린 이불|green
+Lavandin|라반딘|라벤더보다 시원한 허브|green
+Violet Leaf|바이올렛 잎|촉촉한 오이 줄기|green
+Geranium|제라늄|장미를 닮은 풀잎|green
+Juniper|주니퍼|진토닉 속 솔향 열매|green
+Cypress|사이프러스|숲속 상록수|green
+Pine|소나무|숲속 솔잎|green
+Pine Needle|솔잎|바늘처럼 뾰족한 솔잎|green
+Fir Balsam|전나무 수지|크리스마스 트리 냄새|green
+Maté|마테|쌉쌀한 마테차|green
+Chamomile|캐모마일|따뜻한 캐모마일 차|green
+Hay|건초|햇볕에 마른 풀|green
+Fern|고사리|숲 바닥의 촉촉한 잎|green
+Laurel Leaf|월계수 잎|스튜에 넣는 월계수 잎|green
+Bay|베이 리프|스튜에 넣는 월계수 잎|green
+Shiso|시소|깻잎을 닮은 허브|green
+Oregano|오레가노|피자 위 말린 허브|green
+Tomato Leaf|토마토 잎|토마토 줄기를 문지른 향|green
+Clover|클로버|풀밭의 클로버|green
+Basil Verbena|바질 버베나|레몬 향이 나는 허브 잎|green
+Green Watery Accord|초록빛 물 어코드|물기를 머금은 풀잎|green
+Bamboo|대나무|비 온 뒤의 대숲|green
+Olive tree|올리브 나무|지중해 올리브 잎|green
+Myrtle|머틀|은은한 허브 잎|green
+Carrot seed|당근 씨앗|흙 묻은 당근|green
+Sea Notes|바다 향|바닷가의 짭짤한 바람|green
+Aquatic Accord|아쿠아틱 어코드|물보라가 튀는 시원한 향|green
+Salt|소금|바닷가에서 말린 소금|green
+Algae|해조류|파도에 밀려온 김|green
+Mineral Accord|미네랄 어코드|젖은 돌멩이|green
+Sand|모래|햇볕에 데워진 모래|green
+Angelica|안젤리카|흙 내음이 나는 허브 뿌리|green
+Rose|장미|장미 꽃잎 한 장|floral
+Turkish Rose|터키 장미|진한 장미 잼|floral
+Peony|작약|풍성한 작약 꽃다발|floral
+Freesia|프리지아|봄 프리지아 한 다발|floral
+Orchid|난초|은은한 난초 꽃|floral
+Carnation|카네이션|향긋하고 알싸한 카네이션|floral
+Daffodil|수선화|이른 봄의 수선화|floral
+Lilac|라일락|봄날의 라일락 길|floral
+Hyacinth|히아신스|진하게 피어난 봄꽃|floral
+Hibiscus|히비스커스|새콤한 히비스커스 차|floral
+Honeysuckle|인동덩굴|달콤한 여름 꽃|floral
+Marigold|금잔화|선명한 주황 꽃|floral
+Water Lily|수련|연못 위의 수련|floral
+Lotus|연꽃|맑은 연못의 꽃|floral
+Poppy|양귀비|부드러운 양귀비 꽃|floral
+Tulip|튤립|봄 튤립 줄기|floral
+Amaryllis|아마릴리스|크고 화사한 꽃|floral
+Sweet Pea|스위트피|달콤한 완두꽃|floral
+Rosehip|로즈힙|새콤한 로즈힙 차|floral
+Floral notes|꽃 향|꽃다발의 첫 향|floral
+Petalia|페탈리아|겹겹이 쌓인 꽃잎|floral
+Aquatic flowers|물가의 꽃|맑은 물가에 핀 꽃|floral
+Cyclamen|시클라멘|이슬 맺힌 맑은 꽃|floral
+Hawthorn|산사나무 꽃|봄바람에 날리는 흰 꽃잎|floral
+Apple Blossom|사과꽃|하얀 사과 꽃잎|floral
+Pear blossom|배꽃|하얀 배꽃 잎|floral
+Cherry Blossom|벚꽃|봄날의 벚꽃 길|floral
+Peach Blossom|복숭아꽃|분홍빛 복숭아꽃|floral
+Jasmine|재스민|재스민 차의 꽃향기|white
+Jasmine Sambac|삼박 재스민|진하고 달콤한 재스민|white
+Orange Blossom|오렌지 블러섬|하얀 오렌지 꽃잎|white
+Tuberose|튜베로즈|진하고 크리미한 하얀 꽃|white
+Ylang-Ylang|일랑일랑|달콤한 열대 꽃|white
+Gardenia|치자꽃|진하게 피어난 치자꽃|white
+Osmanthus|금목서|살구를 닮은 가을 꽃|white
+Frangipani|프랑지파니|휴양지의 하얀 꽃|white
+Tiaré|티아레|코코넛 오일 같은 하얀 꽃|white
+White Flowers|하얀 꽃|하얀 꽃 한 줌|white
+Lily|백합|활짝 핀 백합|white
+Lily of the Valley|은방울꽃|맑은 비누|white
+Magnolia|목련|레몬빛 목련 꽃잎|white
+Champaca|참파카|달콤한 노란 꽃|white
+Datura flower|다투라 꽃|밤에 피는 하얀 꽃|white
+Night Blooming Jasmine|밤 재스민|밤에 더 진해지는 재스민|white
+Hedione|헤디온|투명하게 번지는 재스민 빛|white
+Mahonial|마호니알|맑고 시원한 은방울|white
+Iris|아이리스|분첩 속 파우더|powder
+Violet|바이올렛|제비꽃 사탕|powder
+Heliotrope|헬리오트로프|아몬드를 닮은 보랏빛 꽃|powder
+Mimosa|미모사|보송보송한 노란 꽃|powder
+Aldehydes|알데하이드|갓 빤 린넨의 비누 거품|powder
+Powdery notes|파우더 향|화장대 위의 파우더|powder
+Rice Powder|쌀 파우더|보송한 쌀가루|powder
+Musk|머스크|갓 빤 하얀 빨래|musk
+Ambrette|앰브레트|따뜻한 살결|musk
+Cashmeran|캐시머란|포근한 캐시미어 니트|musk
+Cashmere Wood|캐시미어 우드|포근한 캐시미어 니트|musk
+Civet|시벳|따뜻하고 동물적인 체온|musk
+Animalic Notes|동물적인 향|사람 살결의 따뜻함|musk
+Ambroxan|앰브록산|깨끗한 피부 위의 은은한 온기|musk
+Ambrofix|앰브로픽스|깨끗한 피부 위의 은은한 온기|musk
+Transluzone|트랜슬루존|투명하게 스며드는 살냄새|musk
+Vanilla|바닐라|바닐라 시럽 한 바퀴|sweet
+Tonka Bean|통카빈|아몬드를 닮은 달콤한 콩|sweet
+Caramel|캐러멜|살짝 탄 설탕|sweet
+Coffee|커피|에스프레소 한 샷|sweet
+Almond|아몬드|구운 아몬드 크림|sweet
+Honey|꿀|토스트 위 꿀 한 스푼|sweet
+Praline|프랄린|견과 캐러멜 사탕|sweet
+Chocolate|초콜릿|다크 초콜릿 한 조각|sweet
+Coconut|코코넛|코코넛 밀크|sweet
+Rum|럼|달콤한 럼 케이크|sweet
+Sugar|설탕|반짝이는 흰 설탕|sweet
+Brown Sugar|흑설탕|흑설탕 시럽|sweet
+Toffee|토피|쫀득한 토피 사탕|sweet
+Marshmallow|마시멜로|구운 마시멜로|sweet
+Hazelnut|헤이즐넛|헤이즐넛 라떼|sweet
+Chestnut|밤|따끈한 군밤|sweet
+Liquorice|감초|달콤쌉싸름한 감초 사탕|sweet
+Cognac|코냑|오크통에서 익은 브랜디|sweet
+Whisky|위스키|오크통에서 익은 위스키|sweet
+Champagne|샴페인|톡톡 터지는 기포|sweet
+Ice Cream|아이스크림|녹기 시작한 바닐라 아이스크림|sweet
+Milk|우유|데운 우유 거품|sweet
+Milk mousse|우유 무스|폭신한 우유 무스|sweet
+Almond milk|아몬드 밀크|고소한 아몬드 우유|sweet
+Amaretto|아마레토|아몬드 리큐르|sweet
+Sesame|참깨|고소하게 볶은 참깨|sweet
+Gourmand accord|구르망 어코드|갓 구운 디저트|sweet
+Coumarin|쿠마린|갓 벤 건초 같은 달콤함|sweet
+Maple|메이플|팬케이크 위 메이플 시럽|sweet
+Pistachio|피스타치오|고소한 피스타치오 크림|sweet
+Chantilly|샹티이 크림|폭신한 휘핑크림|sweet
+Lactones|락톤|우유처럼 크리미한 느낌|sweet
+Amber|앰버|햇볕에 데운 담요|amber
+Benzoin|벤조인|바닐라를 닮은 나무 수지|amber
+Labdanum|랍다눔|따뜻하고 끈적한 수지|amber
+Frankincense|유향|사원에서 피우는 향|amber
+Incense|인센스|향을 피운 방|amber
+Myrrh|몰약|쌉싸름한 수지|amber
+Elemi|엘레미|레몬을 닮은 수지|amber
+Opoponax|오포포낙스|달콤한 수지|amber
+Styrax|스티락스|가죽을 닮은 달콤한 수지|amber
+Resins|수지|따뜻한 나무 진|amber
+Amberwood|앰버우드|호박빛으로 따뜻한 나무|amber
+Gurjum Balsam|구르줌 발삼|따뜻한 나무 수지|amber
+Ambergris|앰버그리스|바닷가에서 말린 짭짤한 온기|amber
+Balsam of Peru|페루 발삼|바닐라를 닮은 따뜻한 수지|amber
+Immortelle|이모르텔|달콤하게 마른 꽃|amber
+Cardamom|카다멈|짜이 티 속 향신료|spice
+Cinnamon|시나몬|시나몬롤 위 가루|spice
+Nutmeg|넛멕|뱅쇼에 넣는 향신료|spice
+Ginger|생강|알싸한 생강차|spice
+Pink Pepper|핑크 페퍼|톡 쏘는 분홍 후추|spice
+Pepper|후추|갓 간 후추|spice
+Saffron|사프란|금빛 향신료|spice
+Clove|정향|뱅쇼 속 클로브|spice
+Anise|아니스|달콤한 감초 향 씨앗|spice
+Cumin|커민|따뜻한 카레 향 씨앗|spice
+Pimento|피멘토|올스파이스 열매|spice
+Spice|향신료|따뜻한 향신료 선반|spice
+Spicy notes|스파이시 노트|따뜻한 향신료 선반|spice
+Red Pepper|붉은 후추|매콤한 붉은 후추|spice
+Sichuan Pepper|사천 후추|얼얼한 산초|spice
+Caraway|캐러웨이|호밀빵 속 씨앗|spice
+Coriander|고수|고수 씨앗의 상큼한 향|spice
+Tobacco|토바코|말린 담뱃잎|smoke
+Leather|가죽|새 가죽 재킷|smoke
+Suede|스웨이드|보드라운 스웨이드|smoke
+Birch|자작나무|모닥불 연기|smoke
+Birch Woods|자작나무 숲|모닥불 연기|smoke
+Cade|케이드|훈제 나무 연기|smoke
+Guaiac Wood|과이악 우드|훈연한 나무|smoke
+Castoreum|캐스토리움|가죽을 닮은 동물적인 향|smoke
+Patchouli|패출리|젖은 흙과 마른 잎|wood
+Sandalwood|샌달우드|크리미한 나무|wood
+Cedarwood|시더우드|연필 깎은 냄새|wood
+Vetiver|베티버|비 온 뒤 흙|wood
+Oud|우드|깊고 진한 침향|wood
+Woody notes|우디 노트|숲속 나무 한 그루|wood
+Wood|나무|갓 켠 원목|wood
+White Woods|화이트 우드|밝고 건조한 나무|wood
+Papyrus|파피루스|마른 종이|wood
+Cypriol|시프리올|흙 내음이 나는 풀뿌리|wood
+Rosewood|로즈우드|장미를 닮은 나무|wood
+Teak Wood|티크 우드|오래된 원목 가구|wood
+Oakwood|오크 우드|오크 나무통|wood
+Ebony Wood|흑단|짙은 나무|wood
+Mahogany|마호가니|윤이 나는 갈색 원목|wood
+Dry Wood|마른 나무|바싹 마른 장작|wood
+Blonde Woods|밝은 나무|결이 고운 밝은 나무|wood
+Fig Wood|무화과 나무|무화과 나뭇가지|wood
+Georgywood|조지우드|따뜻하고 건조한 나무|wood
+Clearwood|클리어우드|투명하게 번지는 나무|wood
+Amyris|아미리스|은은한 나뭇결|wood
+Driftwood|유목|바닷가에 떠밀려 온 나무|wood
+Oakmoss|오크모스|젖은 숲 바닥의 이끼|wood
+Moss|이끼|바위에 낀 이끼|wood
+Crystal Moss|맑은 이끼|투명한 이끼|wood
+Lichen|지의류|나무 껍질에 붙은 이끼|wood
+Mushroom|버섯|숲속의 젖은 버섯|wood
+Orcanox|오르카녹스|따뜻하고 건조한 나무|wood
+Akigalawood|아키갈라우드|향신료가 섞인 나무|wood
+Palo Santo|팔로산토|은은하게 타는 성스러운 나무|wood

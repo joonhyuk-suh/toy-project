@@ -1,0 +1,1068 @@
+<!--
+  prototype shell: the review chrome every prototype starts from.
+
+  Keep this comment in the prototype you grow from here: it is the contract,
+  and later turns work from that file rather than from this one.
+
+  Contract (extend product screens; keep the review shell):
+  - Product:  .sh-stage contains only end-user product UI. Keep review notes,
+               rationale, instructions, and approval controls in conversation.
+  - Screens:  <section data-screen="slug" data-title="Label"> inside .sh-stage.
+               The selector, arrow keys, and #hash routing build themselves.
+               Use one option per product destination or distinct surface,
+               named by its product role. Keep baselines, variants, comparison
+               labels, steps, indexes, and progress out of names and states.
+               Links may use href="#slug".
+  - States:   "Default" is automatic. A screen declares only representative
+               presets in data-states="Empty,Error". Use natural, screen-specific
+               names. Reserve presets for important multi-step results, forced
+               data or errors, or materially different structure; keep one-click
+               and transient states as interactions. Use data-when="Empty" on
+               preset-only elements. Call prototypeShell.setState("Name") on
+               entry and setState("Default") on exit, including when repeated
+               actions cross a preset condition.
+  - Viewport: "vp (m)" cycles full / 390 / 768. The 390 preset is a
+               fixed-height, internally scrolling phone frame. Start a
+               mobile-first prototype by adding class="sh-vp-390" to <body>
+               (or a bootstrap classList.add before the chrome script runs).
+  - Pinning:  keep in-frame bars (tab bars, CTAs) inside the phone with
+               position: sticky; position: fixed pins to the browser window.
+  - Tokens:   replace the project-tokens block with project tokens copied
+               verbatim. Map differing names to --background, --foreground, and
+               --font afterwards; replace network fonts with a system stack and
+               note that substitution. Without a design system, keep this
+               palette as the finished style. When the project ships dark
+               tokens, copy them under .sh-theme-dark, which the shell sets
+               on both the root element and body, so :root.sh-theme-dark and
+               body.sh-theme-dark work too. A .dark class or a
+               prefers-color-scheme media query copied verbatim would follow
+               the reviewer's system instead of the toggle.
+  - Theme:    the light / dark switch (t) changes the product surface only.
+               It appears only when a .sh-theme-dark rule declares dark tokens,
+               so a prototype without them carries no theme control. Prototypes
+               always load light; the review bar keeps its own dark styling in
+               both themes so it still reads as chrome.
+  - Placeholders: .wf-pic stands in for pictures the prototype has no real
+               files for. Use real text everywhere text belongs.
+
+  - Chrome:   Keep exactly the screen selector, selected-screen state selector,
+               viewport cycle, and theme toggle.
+
+  Self-contained by design: no build, no framework, no network.
+-->
+<meta charset="utf-8">
+<title>향 아카이브 · 향수 찾기 프로토타입</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* candidate brand tokens (shadcn token names kept; values replace the current preset, see conversation) */
+  :root {
+    --background: #f6f1e9;
+    --foreground: #2b2520;
+    --card: #fffcf7;
+    --card-foreground: #2b2520;
+    --primary: #3d3229;
+    --primary-foreground: #fbf7f0;
+    --secondary: #efe7db;
+    --secondary-foreground: #3d3229;
+    --muted: #ece4d7;
+    --muted-foreground: #8a7d70;
+    --accent: #e6dccd;
+    --accent-foreground: #2b2520;
+    --destructive: #b5533c;
+    --border: #e3d8c8;
+    --ring: #b8a58f;
+    --radius: 0.75rem;
+    /* system fonts standing in for web fonts: Arita Buri / MaruBuri -> Noto Serif KR, Pretendard -> Noto Sans KR */
+    --font-display: "Arita Buri", "MaruBuri", "Noto Serif KR", "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
+    --font-latin: "Cormorant Garamond", "Didot", "Bodoni 72", "Noto Serif KR", Georgia, serif;
+    --font: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .sh-theme-dark {
+    --background: #1d1916; --foreground: #f1e9dd; --card: #26211d; --card-foreground: #f1e9dd;
+    --primary: #efe3d1; --primary-foreground: #241e19; --secondary: #322b25; --secondary-foreground: #efe3d1;
+    --muted: #2e2722; --muted-foreground: #a99a8a; --accent: #3a322b; --accent-foreground: #f1e9dd;
+    --border: #3a322b; --ring: #6d5e50;
+  }
+  /* scent family palette: muted, natural pigments */
+  :root {
+    --fam-citrus: #ead9a0; --fam-fruit: #ecc2b0; --fam-green: #c4d1b0; --fam-petal: #ebc6cc;
+    --fam-white: #efe6d2; --fam-powder: #d6cde3; --fam-spice: #e1b68e; --fam-wood: #cdb39a;
+    --fam-smoke: #b9aea5; --fam-amber: #e3c48a; --fam-sweet: #dcc0a3; --fam-musk: #ecd8c8;
+  }
+
+  /* review chrome (sh-*): keep; extend product styles elsewhere */
+  * { box-sizing: border-box }
+  body {
+    margin: 0; padding: 0 0 40px;
+    background: var(--background, #f6f6f6); color: var(--foreground, #3a3a3a);
+    font-family: var(--font, system-ui, sans-serif);
+  }
+  .sh-bar {
+    position: sticky; top: 0; z-index: 999;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 12px; background: #191a1c; color: #d7d7d7;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .sh-bar b, .sh-control-label { color: #8a8f98; font-weight: 500 }
+  .sh-control { display: inline-flex; gap: 5px; align-items: center }
+  .sh-bar button {
+    border: 1px solid #3a3d42; background: none; color: inherit;
+    font: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  }
+  .sh-bar select {
+    width: 170px; border: 1px solid #3a3d42; background: #232428; color: inherit;
+    font: inherit; padding: 3px 28px 3px 9px; border-radius: 7px; cursor: pointer;
+    color-scheme: dark;
+  }
+  #sh-screen { width: 190px }
+  .sh-bar button.on { background: #d7d7d7; color: #191a1c; border-color: #d7d7d7 }
+  .sh-theme { display: inline-flex; border: 1px solid #3a3d42; border-radius: 99px; overflow: hidden }
+  .sh-theme button { border: 0; border-radius: 0; padding: 2px 10px }
+  .sh-spacer { flex: 1 }
+  .sh-stage { max-width: 960px; margin: 0 auto; padding: 12px 16px 0 }
+  [hidden] { display: none !important }
+
+  .sh-vp-390 .sh-stage {
+    max-width: 390px; background: var(--background, #f6f6f6);
+    border: 10px solid #191a1c; border-radius: 28px;
+    padding: 16px 12px; height: min(844px, calc(100dvh - 52px));
+    overflow-y: auto; margin-top: 12px;
+  }
+  .sh-vp-768 .sh-stage {
+    max-width: 768px; border: 1px solid #c4c4c4; border-radius: 12px;
+    padding: 16px; margin-top: 12px;
+  }
+  .wf-pic  { border-radius: 4px; background:
+             repeating-linear-gradient(45deg, #e9e9e9, #e9e9e9 6px, #f2f2f2 6px, #f2f2f2 12px) }
+  .sh-theme-dark .wf-pic { background: repeating-linear-gradient(45deg,
+             color-mix(in srgb, var(--foreground) 16%, transparent) 0 6px,
+             color-mix(in srgb, var(--foreground) 8%, transparent) 6px 12px) }
+
+  /* ---------- product ---------- */
+  .sh-stage { max-width: 1120px; font-size: 14px; line-height: 1.6; letter-spacing: -0.005em }
+  section[data-screen] { display: flex; flex-direction: column; gap: 20px; min-height: 100%; }
+  h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; line-height: 1.3 }
+  h1 { font-size: 30px } h2 { font-size: 20px } h3 { font-size: 16px }
+  .is-narrow h1 { font-size: 24px }
+  p { margin: 0 }
+  .latin { font-family: var(--font-latin); font-style: italic; letter-spacing: 0 }
+  .eyebrow { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted-foreground) }
+  .muted { color: var(--muted-foreground) } .small { font-size: 12px }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap } .between { justify-content: space-between }
+  .stack { display: flex; flex-direction: column; gap: 10px }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px }
+  .split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 24px; align-items: start }
+  .is-narrow .grid2, .is-narrow .split { grid-template-columns: 1fr }
+  .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; flex: none }
+
+  /* top nav (wide) and bottom tab bar (narrow) */
+  .appbar { display: flex; align-items: center; gap: 24px; padding: 6px 0 14px; border-bottom: 1px solid var(--border) }
+  .brand { font-family: var(--font-display); font-size: 18px; text-decoration: none; color: var(--foreground); display: flex; align-items: center; gap: 8px }
+  .brand .ico { width: 22px; height: 22px }
+  .appbar nav { display: flex; gap: 4px; margin-left: auto }
+  .appbar nav a { text-decoration: none; color: var(--muted-foreground); padding: 6px 12px; border-radius: 99px; font-size: 13px }
+  .appbar nav a.on { color: var(--foreground); background: var(--secondary) }
+  .tabbar { display: none }
+  .is-narrow .appbar nav { display: none }
+  .is-narrow .appbar { padding-bottom: 10px }
+  .is-narrow .tabbar { position: sticky; bottom: 0; display: flex; border-top: 1px solid var(--border); background: var(--background); margin: auto -12px -16px; padding: 8px 0 12px; z-index: 4 }
+  .tabbar a { flex: 1; text-align: center; text-decoration: none; color: var(--muted-foreground); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px }
+  .tabbar a.on { color: var(--foreground) }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 99px; border: 1px solid transparent; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--primary); color: var(--primary-foreground); white-space: nowrap; text-decoration: none }
+  .btn:hover { opacity: .9 } .btn[disabled] { opacity: .4; pointer-events: none }
+  .btn.outline { background: transparent; color: var(--foreground); border-color: var(--border) }
+  .btn.ghost { background: transparent; color: var(--foreground); padding: 0 8px }
+  .btn.block { width: 100%; height: 46px; font-size: 14px }
+  .btn .ico { width: 16px; height: 16px }
+  .iconbtn { width: 38px; height: 38px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); display: grid; place-items: center; cursor: pointer; color: var(--foreground); text-decoration: none; flex: none }
+  .iconbtn[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary) }
+  .iconbtn[aria-pressed="true"] .ico { fill: currentColor }
+  .iconbtn .ico { width: 17px; height: 17px }
+
+  .card { background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: 18px; padding: 18px }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11px; background: var(--secondary); color: var(--secondary-foreground); white-space: nowrap }
+  .fam { color: #3b2f25 }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); font: inherit; font-size: 13px; cursor: pointer }
+  .chip[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary) }
+  .chip[disabled] { opacity: .4; cursor: not-allowed }
+  .chip .ico { width: 14px; height: 14px }
+  .dot { width: 10px; height: 10px; border-radius: 99px; flex: none }
+  .sep { height: 1px; background: var(--border) }
+  .alert { border: 1px solid var(--border); background: var(--secondary); border-radius: 14px; padding: 12px 14px; font-size: 12px; display: flex; gap: 10px; align-items: flex-start }
+  .alert .ico { width: 16px; height: 16px; margin-top: 1px }
+  .orb { border-radius: 999px; display: grid; place-items: center; flex: none; color: #3b2f25 }
+
+  /* home */
+  .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: center; padding: 18px 0 6px }
+  .is-narrow .hero { grid-template-columns: 1fr }
+  .hero h1 { font-size: 40px; font-weight: 400 }
+  .is-narrow .hero h1 { font-size: 28px }
+  .hero-art { position: relative; height: 220px }
+  .is-narrow .hero-art { height: 150px }
+  .hero-art .orb { position: absolute; mix-blend-mode: multiply; opacity: .9 }
+  .mode-card { display: flex; gap: 16px; align-items: center; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s }
+  .mode-card:hover { transform: translateY(-2px) }
+  .mode-card .orb { width: 64px; height: 64px }
+  .mode-card .orb .ico { width: 28px; height: 28px; stroke-width: 1.1 }
+  .mode-card .go { margin-left: auto; color: var(--muted-foreground) }
+
+  /* food finder */
+  .search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); border-radius: 99px; padding: 0 14px; height: 44px }
+  .search input { border: 0; outline: 0; background: transparent; font: inherit; flex: 1; color: var(--foreground) }
+  .food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px }
+  .food { position: relative; border: 1px solid var(--border); background: var(--card); border-radius: 16px; padding: 14px 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; font: inherit; color: inherit; text-align: center; transition: border-color .15s, transform .15s }
+  .food:hover { transform: translateY(-1px) }
+  .food .orb { width: 46px; height: 46px } .food .orb .ico { width: 22px; height: 22px; stroke-width: 1.2 }
+  .food .nm { font-size: 13px }
+  .food .sub { font-size: 10.5px; color: var(--muted-foreground); line-height: 1.35 }
+  .food[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset }
+  .food[aria-pressed="true"]::after { content: attr(data-order); position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 99px; background: var(--primary); color: var(--primary-foreground); font-size: 10px; display: grid; place-items: center }
+  .food[disabled] { opacity: .35 }
+  .panel { position: sticky; top: 52px }
+  .is-narrow .panel { position: static }
+  .note-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; font-size: 12.5px; color: #3b2f25 }
+  .note-pill small { opacity: .7 }
+  .note-pill.common { box-shadow: 0 0 0 1.5px #3b2f25 inset }
+  .plate-bar { display: none }
+  .is-narrow .plate-bar { display: flex; position: sticky; bottom: 62px; z-index: 3; gap: 10px; align-items: center; background: var(--primary); color: var(--primary-foreground); border-radius: 18px; padding: 10px 10px 10px 14px; box-shadow: 0 6px 20px rgb(43 37 32 / .18) }
+  .plate-bar .notes { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none }
+  .plate-bar .note-pill { padding: 4px 10px; font-size: 11.5px; white-space: nowrap }
+  .plate-bar .btn { background: var(--primary-foreground); color: var(--primary); height: 34px; padding: 0 12px }
+  .mini-result { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border); cursor: pointer }
+  .mini-result:last-child { border-bottom: 0 }
+  @media (prefers-reduced-motion: no-preference) {
+    .pop { animation: pop .5s cubic-bezier(.2,.8,.3,1.15) both; animation-delay: calc(var(--i, 0) * 70ms) }
+    @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.95) } }
+    .ring-fill { transition: stroke-dashoffset 1.1s cubic-bezier(.2,.8,.3,1) }
+    .bottle-layer { transform-origin: bottom; animation: fill .8s ease-out both; animation-delay: calc(var(--i, 0) * 200ms) }
+    @keyframes fill { from { transform: scaleY(0) } }
+    .wheel path.sector { transition: transform .25s ease, opacity .2s }
+    .float { animation: float 6s ease-in-out infinite } @keyframes float { 50% { transform: translateY(-6px) } }
+  }
+
+  /* results */
+  .p-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+  .is-narrow .p-list { grid-template-columns: 1fr }
+  .p-item { display: flex; gap: 14px; align-items: center; cursor: pointer }
+  .ring { width: 54px; height: 54px; flex: none; position: relative }
+  .ring svg { width: 54px; height: 54px; transform: rotate(-90deg) }
+  .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 500 }
+  .p-main { flex: 1; min-width: 0 }
+  .p-main .nm { font-family: var(--font-latin); font-style: italic; font-size: 18px; line-height: 1.2 }
+  .p-main .why { font-size: 12px; color: var(--muted-foreground); margin-top: 4px }
+  .bottle-mini { width: 30px; height: 42px; border-radius: 8px 8px 10px 10px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column-reverse; flex: none }
+
+  /* expert */
+  .pro { display: grid; grid-template-columns: 340px 1fr 240px; gap: 18px; align-items: start }
+  .is-narrow .pro, .is-mid .pro { grid-template-columns: 1fr }
+  .wheel { width: 100%; max-width: 320px; display: block; margin: 0 auto }
+  .wheel path.sector { cursor: pointer; transform-origin: 160px 160px; stroke: var(--card); stroke-width: 2 }
+  .wheel path.sector:hover { opacity: .85 }
+  .wheel path.sector.on { transform: scale(1.045) }
+  .wheel text { font-family: var(--font); font-size: 11px; fill: #3b2f25; pointer-events: none }
+  .wheel .center-t { font-family: var(--font-display); font-size: 16px; fill: var(--foreground) }
+  .wheel .center-s { font-size: 11px; fill: var(--muted-foreground) }
+  .checklist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px }
+  .is-narrow .checklist { grid-template-columns: 1fr }
+  .checklist label { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer }
+  .checklist label:hover { background: var(--secondary) }
+  .checklist input { width: 16px; height: 16px; accent-color: var(--primary); margin: 0 }
+  .checklist .m { font-size: 11px; color: var(--muted-foreground) }
+  .checklist label.disabled { opacity: .4; cursor: not-allowed }
+  .seg { display: flex; flex-direction: column; gap: 4px }
+  .seg button { text-align: left; border: 1px solid var(--border); background: var(--card); font: inherit; font-size: 12.5px; padding: 8px 12px; border-radius: 10px; cursor: pointer; color: var(--foreground) }
+  .seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary) }
+  .is-narrow .seg, .is-mid .seg { flex-direction: row; flex-wrap: wrap }
+
+  /* detail */
+  .bottle-wrap { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 10px 0 }
+  .cap { width: 46px; height: 22px; background: #3b2f25; border-radius: 6px 6px 2px 2px; opacity: .85 }
+  .neck { width: 26px; height: 10px; background: #cdbfae }
+  .bottle { width: 150px; height: 190px; border: 1.5px solid #cdbfae; border-radius: 22px 22px 30px 30px; overflow: hidden; display: flex; flex-direction: column-reverse; background: var(--card) }
+  .bottle-layer { flex: 1; display: grid; place-items: center; font-size: 11px; color: #3b2f25 }
+  .recipe ul { list-style: none; margin: 0; padding: 0 }
+  .recipe li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border) }
+  .recipe li:last-child { border-bottom: 0 }
+  .layer-tag { font-size: 10.5px; color: var(--muted-foreground); min-width: 48px }
+  .recipe .orb { width: 30px; height: 30px } .recipe .orb .ico { width: 15px; height: 15px }
+
+  /* my scent */
+  .bar { height: 8px; border-radius: 99px; background: var(--muted); overflow: hidden }
+  .bar i { display: block; height: 100% ; border-radius: 99px }
+  .stack-bar { display: flex; height: 14px; border-radius: 99px; overflow: hidden }
+  .locked { background: repeating-linear-gradient(135deg, var(--card), var(--card) 10px, var(--secondary) 10px, var(--secondary) 20px) }
+  .hist { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border); cursor: pointer }
+  .hist:last-child { border-bottom: 0 }
+
+  /* share */
+  .share-card { border-radius: 24px; padding: 26px; color: #2d241c; position: relative; overflow: hidden; max-width: 420px; width: 100%; margin: 0 auto }
+  .share-card .type { font-family: var(--font-display); font-size: 28px; line-height: 1.25 }
+  .share-card .inner { background: rgb(255 252 247 / .72); border-radius: 16px; padding: 14px }
+  .share-card .blob { position: absolute; border-radius: 999px; opacity: .45; mix-blend-mode: multiply }
+  .toast { position: sticky; bottom: 24px; margin: 0 auto; background: var(--primary); color: var(--primary-foreground); font-size: 12px; padding: 9px 16px; border-radius: 99px; width: max-content; z-index: 5 }
+</style>
+
+<header class="sh-bar">
+  <b>proto</b>
+  <label class="sh-control"><span class="sh-control-label">screen</span><select id="sh-screen"></select></label>
+  <span class="sh-spacer"></span>
+  <label class="sh-control"><span class="sh-control-label">state</span><select id="sh-state"></select></label>
+  <button id="sh-vp">vp: full (m)</button>
+  <div class="sh-theme" id="sh-theme" role="group" aria-label="theme (t)" hidden>
+    <button data-theme="light">light</button><button data-theme="dark">dark</button>
+  </div>
+</header>
+
+<main class="sh-stage">
+
+  <section data-screen="home" data-title="홈">
+    <div data-appbar="home"></div>
+    <div class="hero">
+      <div class="stack" style="gap:14px">
+        <span class="eyebrow">Scent archive</span>
+        <h1>좋아하는 맛에서<br>나의 향을 찾아요</h1>
+        <p class="muted" style="max-width:420px">향수 용어를 몰라도 괜찮아요. 매일 마시는 커피, 좋아하는 디저트에 이미 당신의 취향이 들어 있어요.</p>
+        <div class="row" style="margin-top:6px"><a class="btn" href="#food">음식으로 찾기</a><a class="btn outline" href="#expert">전문가 모드</a></div>
+      </div>
+      <div class="hero-art" aria-hidden="true" id="hero-art"></div>
+    </div>
+    <div class="grid2">
+      <a class="card mode-card" href="#food" data-component="Card"><span class="orb" style="background:var(--fam-sweet)" data-ico="coffee"></span>
+        <div class="stack" style="gap:4px"><h3>음식으로 찾기</h3><p class="muted small">음식을 고르는 즉시 공통 재료와 어울리는 향수가 나타나요</p></div><span class="go" data-ico="chevron-right"></span></a>
+      <a class="card mode-card" href="#expert" data-component="Card"><span class="orb" style="background:var(--fam-powder)" data-ico="flask-conical"></span>
+        <div class="stack" style="gap:4px"><h3>전문가 모드</h3><p class="muted small">향 계열 휠에서 재료를 고르고 층과 지속 시간으로 걸러요</p></div><span class="go" data-ico="chevron-right"></span></a>
+    </div>
+    <div class="stack">
+      <div class="row between"><h3>이번 주 많이 찾은 조합</h3><span class="muted small">눌러서 바로 보기</span></div>
+      <div class="row" id="home-presets"></div>
+    </div>
+    <nav class="tabbar" data-tabbar="home"></nav>
+  </section>
+
+  <section data-screen="food" data-title="음식으로 찾기" data-states="검색 결과 없음">
+    <div data-appbar="food"></div>
+    <div class="split">
+      <div class="stack" style="gap:14px">
+        <div class="stack" style="gap:4px"><h1>좋아하는 음식 고르기</h1><p class="muted">끌리는 음식을 1–5개 골라 보세요. 고르는 즉시 공통 재료와 어울리는 향수가 나타나요.</p></div>
+        <label class="search"><span data-ico="search"></span><input id="food-q" placeholder="음식 이름으로 찾기 (예: 라떼, 타르트)" autocomplete="off"></label>
+        <div class="row" id="food-cats"></div>
+        <div class="food-grid" id="food-grid"></div>
+        <div class="card stack" id="food-none" hidden style="align-items:center;text-align:center">
+          <span class="orb" style="width:48px;height:48px;background:var(--secondary)" data-ico="search"></span>
+          <h3 id="food-none-title">찾는 음식이 아직 없어요</h3>
+          <p class="muted small">재료를 하나씩 정리한 음식만 고를 수 있어요. 비슷한 음식으로 시작해 보세요.</p>
+          <div class="row" id="food-none-sugg" style="justify-content:center"></div>
+          <button class="btn outline" data-toast="요청을 보냈어요. 정리되면 목록에 추가할게요">이 음식 추가 요청하기</button>
+        </div>
+      </div>
+      <aside class="panel stack" id="food-panel" style="gap:12px"></aside>
+    </div>
+    <div class="plate-bar" id="plate-bar" data-component="new:PlateBar"></div>
+    <nav class="tabbar" data-tabbar="food"></nav>
+    <div class="toast" id="toast-food" hidden></div>
+  </section>
+
+  <section data-screen="results" data-title="추천 향수 목록">
+    <div data-appbar="food"></div>
+    <div class="row between">
+      <div class="stack" style="gap:4px"><span class="eyebrow">Matched by taste</span><h1>내 입맛 향수</h1></div>
+      <div class="row"><a class="btn outline" href="#food">음식 바꾸기</a><a class="btn" href="#share"><span data-ico="share-2"></span>결과 공유</a></div>
+    </div>
+    <div class="row" id="result-foods"></div>
+    <p class="muted small" id="result-summary"></p>
+    <div class="p-list" id="result-list"></div>
+    <p class="muted small" style="text-align:center">궁합 점수는 고른 음식 중 몇 개가 이 향수와 이어지는지, 그리고 겹치는 재료가 얼마나 드문지로 계산해요.</p>
+    <nav class="tabbar" data-tabbar="food"></nav>
+  </section>
+
+  <section data-screen="expert" data-title="전문가 모드" data-states="조건에 맞는 향수 없음">
+    <div data-appbar="expert"></div>
+    <div class="row between">
+      <div class="stack" style="gap:4px"><span class="eyebrow">Pro mode</span><h1>재료로 직접 찾기</h1></div>
+      <button class="btn ghost" id="ex-reset"><span data-ico="rotate-ccw"></span>초기화</button>
+    </div>
+    <div class="pro">
+      <div class="card stack" style="align-items:center">
+        <p class="small muted" style="align-self:flex-start">1. 향 계열 휠에서 끌리는 영역을 누르세요</p>
+        <svg class="wheel" viewBox="0 0 320 320" id="wheel" role="img" aria-label="향 계열 휠" data-component="new:ScentWheel"></svg>
+      </div>
+      <div class="card stack">
+        <div class="row between"><p class="small muted">2. 원하는 재료를 체크하세요</p><span class="small" id="ex-count">0/4</span></div>
+        <h3 id="ex-fam-title"></h3>
+        <ul class="checklist" id="ex-notes"></ul>
+        <p class="small muted" id="ex-limit" hidden>재료는 최대 4개까지 고를 수 있어요. 하나를 해제하고 골라 주세요.</p>
+        <div class="sep"></div>
+        <div class="row" id="ex-picked"><span class="small muted">고른 재료가 여기에 모여요</span></div>
+      </div>
+      <div class="card stack">
+        <p class="small muted">3. 조건 더하기</p>
+        <h3 style="font-size:14px">재료가 들어간 층</h3>
+        <div class="seg" id="ex-layer" data-component="ToggleGroup">
+          <button data-v="any" aria-pressed="true">전체</button><button data-v="top" aria-pressed="false">처음 향 · 뿌린 직후</button><button data-v="heart" aria-pressed="false">중간 향 · 1시간 뒤</button><button data-v="base" aria-pressed="false">잔향 · 저녁까지</button>
+        </div>
+        <h3 style="font-size:14px;margin-top:6px">지속 시간 <span class="small muted" style="font-family:var(--font)">농도 기준 추정</span></h3>
+        <div class="seg" id="ex-dur">
+          <button data-v="short" aria-pressed="false">짧음 1–2시간</button><button data-v="mid" aria-pressed="false">중간 3–4시간</button><button data-v="long" aria-pressed="false">김 5–6시간</button><button data-v="xlong" aria-pressed="false">매우 김 7시간+</button>
+        </div>
+      </div>
+    </div>
+    <div class="row between"><h2 id="ex-title">향수 0개</h2><span class="muted small">궁합 점수 순</span></div>
+    <div class="p-list" id="ex-list"></div>
+    <div class="card stack" data-when="조건에 맞는 향수 없음" style="text-align:center;align-items:center">
+      <span class="orb" style="width:48px;height:48px;background:var(--secondary)" data-ico="droplet"></span>
+      <h3>조건에 맞는 향수가 없어요</h3>
+      <p class="muted small">재료를 하나 빼거나 층과 지속 시간 조건을 풀어 보세요.</p>
+      <button class="btn outline" id="ex-relax">층·지속 시간 조건 풀기</button>
+    </div>
+    <nav class="tabbar" data-tabbar="expert"></nav>
+  </section>
+
+  <section data-screen="detail" data-title="향수 상세" data-states="층 정보 없는 향수">
+    <div data-appbar="detail"></div>
+    <div class="row"><a class="btn ghost" id="detail-back" href="#results"><span data-ico="chevron-left"></span>목록으로</a></div>
+    <div id="detail-body"></div>
+    <nav class="tabbar" data-tabbar="detail"></nav>
+  </section>
+
+  <section data-screen="me" data-title="나의 향" data-states="기록 없음">
+    <div data-appbar="me"></div>
+    <div class="stack" style="gap:4px"><span class="eyebrow">My scent</span><h1>나의 향</h1><p class="muted">지금까지 찾아본 기록으로 내가 끌리는 재료와 계열을 보여 드려요.</p></div>
+    <div class="alert"><span data-ico="lock"></span><span>로그인 전이라 기록과 관심 향수는 <b>이 브라우저에만</b> 저장돼요. 로그인 기능이 생기면 계정으로 옮길 수 있어요.</span></div>
+    <div id="me-body" class="stack" style="gap:16px"></div>
+    <div class="card stack" data-when="기록 없음" style="align-items:center;text-align:center">
+      <span class="orb" style="width:52px;height:52px;background:var(--fam-sweet)" data-ico="sprout"></span>
+      <h3>아직 찾아본 기록이 없어요</h3>
+      <p class="muted small">음식을 고르거나 재료를 골라 향수를 찾아보면 여기에 나의 취향이 쌓여요.</p>
+      <a class="btn" href="#food">음식으로 찾아보기</a>
+    </div>
+    <nav class="tabbar" data-tabbar="me"></nav>
+  </section>
+
+  <section data-screen="share" data-title="결과 공유" data-states="공유받은 사람 화면">
+    <div data-appbar="food"></div>
+    <div class="row" data-when="Default"><a class="btn ghost" href="#results"><span data-ico="chevron-left"></span>결과로</a></div>
+    <div class="stack" style="align-items:center;text-align:center;gap:6px">
+      <h1 id="share-title">내 입맛 향수 공유</h1>
+      <p class="muted small" data-when="공유받은 사람 화면">친구가 자기 입맛 향수를 보냈어요.</p>
+    </div>
+    <div class="share-card stack" id="share-card" data-component="new:ShareCard" style="gap:14px"></div>
+    <div class="stack" data-when="Default" style="max-width:420px;width:100%;margin:0 auto">
+      <div class="row"><button class="btn" style="flex:1" data-toast="공유 링크를 복사했어요"><span data-ico="link"></span>링크 복사</button><button class="btn outline" style="flex:1" data-toast="이미지를 저장했어요"><span data-ico="download"></span>이미지로 저장</button></div>
+      <p class="muted small" style="text-align:center">링크를 받은 사람은 같은 조합의 결과를 보고 바로 자기 것도 만들어 볼 수 있어요.</p>
+    </div>
+    <div class="stack" data-when="공유받은 사람 화면" style="max-width:420px;width:100%;margin:0 auto">
+      <a class="btn block" href="#food">나도 내 입맛 향수 찾기</a>
+      <a class="btn outline block" href="#results">이 조합의 향수 전체 보기</a>
+    </div>
+    <div class="toast" id="toast-share" hidden></div>
+    <nav class="tabbar" data-tabbar="food"></nav>
+  </section>
+
+</main>
+
+<script>
+  const stage = document.querySelector('.sh-stage');
+  const screens = [...stage.querySelectorAll('[data-screen]')];
+  const screenSelect = document.getElementById('sh-screen');
+  const stateSelect = document.getElementById('sh-state');
+  const vpBtn = document.getElementById('sh-vp');
+  const themeCtl = document.getElementById('sh-theme');
+  const themeBtns = [...themeCtl.querySelectorAll('button')];
+  let current = null;
+  let currentStates = [];
+
+  screens.forEach(s => {
+    const option = document.createElement('option');
+    option.textContent = s.dataset.title || s.dataset.screen;
+    option.value = s.dataset.screen;
+    screenSelect.append(option);
+  });
+  screenSelect.onchange = () => show(screenSelect.value);
+
+  function show(slug) {
+    current = screens.find(s => s.dataset.screen === slug) || screens[0];
+    screens.forEach(s => s.hidden = s !== current);
+    screenSelect.value = current.dataset.screen;
+    history.replaceState(null, '', '#' + current.dataset.screen);
+    buildStates();
+    stage.scrollTop = 0; scrollTo(0, 0);
+    if (window.onScreen) window.onScreen(current.dataset.screen);
+  }
+
+  function buildStates() {
+    const declared = (current.dataset.states || '').split(',').map(x => x.trim()).filter(Boolean);
+    currentStates = ['Default', ...declared.filter(name => name !== 'Default')];
+    stateSelect.innerHTML = '';
+    currentStates.forEach(name => {
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = name;
+      stateSelect.append(option);
+    });
+    applyState('Default');
+  }
+
+  function applyState(name) {
+    const active = currentStates.includes(name) ? name : 'Default';
+    current.querySelectorAll('[data-when]').forEach(el => {
+      el.hidden = !el.dataset.when.split(',').map(x => x.trim()).includes(active);
+    });
+    stateSelect.value = active;
+    if (window.onState) window.onState(current.dataset.screen, active);
+  }
+  stateSelect.onchange = () => applyState(stateSelect.value);
+
+  window.prototypeShell = {
+    showScreen: show,
+    setState: applyState,
+    getScreen: () => current?.dataset.screen,
+    getState: () => stateSelect.value
+  };
+
+  const VPS = ['full', '390', '768'];
+  let vp = VPS.find(v => document.body.classList.contains('sh-vp-' + v)) || 'full';
+  function applyVp() {
+    VPS.forEach(v => document.body.classList.toggle('sh-vp-' + v, v === vp && v !== 'full'));
+    vpBtn.textContent = 'vp: ' + vp + ' (m)';
+    vpBtn.classList.toggle('on', vp !== 'full');
+  }
+  vpBtn.onclick = () => { vp = VPS[(VPS.indexOf(vp) + 1) % VPS.length]; applyVp(); };
+  applyVp();
+
+  const hasDark = [...document.styleSheets].some(sheet => {
+    try {
+      return [...sheet.cssRules].some(rule => (rule.selectorText || '')
+        .split(',').some(part => /\.sh-theme-dark$/.test(part.trim())));
+    } catch { return false }
+  });
+  let dark = false;
+  function applyTheme() {
+    document.documentElement.classList.toggle('sh-theme-dark', dark);
+    document.body.classList.toggle('sh-theme-dark', dark);
+    themeBtns.forEach(b => b.classList.toggle('on', (b.dataset.theme === 'dark') === dark));
+  }
+  themeCtl.hidden = !hasDark;
+  themeBtns.forEach(b => b.onclick = () => { dark = b.dataset.theme === 'dark'; applyTheme(); });
+  applyTheme();
+
+  addEventListener('keydown', e => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const i = screens.indexOf(current);
+    if (e.key === 'ArrowRight') show(screens[(i + 1) % screens.length].dataset.screen);
+    if (e.key === 'ArrowLeft') show(screens[(i - 1 + screens.length) % screens.length].dataset.screen);
+    if (e.key === 'm') vpBtn.click();
+    if (e.key === 't' && !themeCtl.hidden) { dark = !dark; applyTheme(); }
+  });
+
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+</script>
+
+<script>
+  /* ---------- icons: lucide (project dependency lucide-react), inlined ---------- */
+  const ICON = {
+    coffee: '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>',
+    leaf: '<path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20"/><path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13"/>',
+    citrus: '<path d="M21.66 17.67a1.08 1.08 0 0 1-.04 1.6A12 12 0 0 1 4.73 2.38a1.1 1.1 0 0 1 1.61-.04z"/><path d="M19.65 15.66A8 8 0 0 1 8.35 4.34"/><path d="m14 10-5.5 5.5"/><path d="M14 17.85V10H6.15"/>',
+    'cake-slice': '<path d="M16 13H3"/><path d="M16 17H3"/><path d="m7.2 7.9-3.388 2.5A2 2 0 0 0 3 12.01V20a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-8.654c0-2-2.44-6.026-6.44-8.026a1 1 0 0 0-1.082.057L10.4 5.6"/><circle cx="9" cy="7" r="2"/>',
+    grape: '<path d="M22 5V2l-5.89 5.89"/><circle cx="16.6" cy="15.89" r="3"/><circle cx="8.11" cy="7.4" r="3"/><circle cx="12.35" cy="11.65" r="3"/><circle cx="13.91" cy="5.85" r="3"/><circle cx="18.15" cy="10.09" r="3"/><circle cx="6.56" cy="13.2" r="3"/><circle cx="10.8" cy="17.44" r="3"/><circle cx="5" cy="19" r="3"/>',
+    wine: '<path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>',
+    popcorn: '<path d="M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4"/><path d="M10 22 9 8"/><path d="m14 22 1-14"/><path d="M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z"/>',
+    croissant: '<path d="M10.2 18H4.774a1.5 1.5 0 0 1-1.352-.97 11 11 0 0 1 .132-6.487"/><path d="M18 10.2V4.774a1.5 1.5 0 0 0-.97-1.352 11 11 0 0 0-6.486.132"/><path d="M18 5a4 3 0 0 1 4 3 2 2 0 0 1-2 2 10 10 0 0 0-5.139 1.42"/><path d="M5 18a3 4 0 0 0 3 4 2 2 0 0 0 2-2 10 10 0 0 1 1.42-5.14"/><path d="M8.709 2.554a10 10 0 0 0-6.155 6.155 1.5 1.5 0 0 0 .676 1.626l9.807 5.42a2 2 0 0 0 2.718-2.718l-5.42-9.807a1.5 1.5 0 0 0-1.626-.676"/>',
+    sandwich: '<path d="m2.37 11.223 8.372-6.777a2 2 0 0 1 2.516 0l8.371 6.777"/><path d="M21 15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5.25"/><path d="M3 15a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h9"/><path d="m6.67 15 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2"/><rect width="20" height="4" x="2" y="11" rx="1"/>',
+    cookie: '<path d="M11 17h.01"/><path d="M11.496 2c.324-.016.558.292.529.615a4 4 0 004.235 4.368.713.713 0 01.758.757 4 4 0 004.366 4.237c.323-.03.63.204.614.527a10 10 0 01-2.915 6.566A1 1 0 114.93 4.918 10 10 0 0111.496 2"/><path d="M12 12h.01"/><path d="M16 16h.01"/><path d="M7 14h.01"/><path d="M9 8h.01"/>',
+    milk: '<path d="M8 2h8"/><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2"/><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0"/>',
+    apple: '<path d="M12 6.528V3a1 1 0 0 1 1-1h0"/><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21"/>',
+    cherry: '<path d="M2 17a5 5 0 0 0 10 0c0-2.76-2.5-5-5-3-2.5-2-5 .24-5 3Z"/><path d="M12 17a5 5 0 0 0 10 0c0-2.76-2.5-5-5-3-2.5-2-5 .24-5 3Z"/><path d="M7 14c3.22-2.91 4.29-8.75 5-12 1.66 2.38 4.94 9 5 12"/><path d="M22 9c-4.29 0-7.14-2.33-10-7 5.71 0 10 4.67 10 7Z"/>',
+    banana: '<path d="M4 13c3.5-2 8-2 10 2a5.5 5.5 0 0 1 8 5"/><path d="M5.15 17.89c5.52-1.52 8.65-6.89 7-12C11.55 4 11.5 2 13 2c3.22 0 5 5.5 5 8 0 6.5-4.2 12-10.49 12C5.11 22 2 22 2 20c0-1.5 1.14-1.55 3.15-2.11Z"/>',
+    'glass-water': '<path d="M5.116 4.104A1 1 0 0 1 6.11 3h11.78a1 1 0 0 1 .994 1.105L17.19 20.21A2 2 0 0 1 15.2 22H8.8a2 2 0 0 1-2-1.79z"/><path d="M6 12a5 5 0 0 1 6 0 5 5 0 0 0 6 0"/>',
+    flame: '<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/>',
+    candy: '<path d="M10 7v10.9"/><path d="M14 6.1V17"/><path d="M16 7V3a1 1 0 0 1 1.707-.707 2.5 2.5 0 0 0 2.152.717 1 1 0 0 1 1.131 1.131 2.5 2.5 0 0 0 .717 2.152A1 1 0 0 1 21 8h-4"/><path d="M16.536 7.465a5 5 0 0 0-7.072 0l-2 2a5 5 0 0 0 0 7.07 5 5 0 0 0 7.072 0l2-2a5 5 0 0 0 0-7.07"/><path d="M8 17v4a1 1 0 0 1-1.707.707 2.5 2.5 0 0 0-2.152-.717 1 1 0 0 1-1.131-1.131 2.5 2.5 0 0 0-.717-2.152A1 1 0 0 1 3 16h4"/>',
+    cake: '<path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/>',
+    nut: '<path d="M16.847 5.847 20 9a7.23 7.23 0 011.551 7.516C21.241 17.352 21 17.932 21 19v1a1 1 0 01-1 1h-1c-1.069 0-1.648.242-2.485.552A7.2 7.2 0 019.002 20l-3.155-3.153"/><path d="M18.21 5.43c-1.71.69-5.07 1.07-6.71 1.07.46 1.38.91 2.74.61 4.88a.88.88 0 01-.73.74c-1.78.28-3.54-.17-4.88-.62 0 1.64-.38 5-1.07 6.71-.21.52-.82.55-1.17.12A10 10 0 0118.33 4.26c.43.35.4.97-.12 1.17"/><path d="M4.93 4.93 3 3a.7.7 0 010-1"/>',
+    'flask-conical': '<path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/>',
+    heart: '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/>',
+    'share-2': '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+    search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+    moon: '<path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/>',
+    'clock-3': '<circle cx="12" cy="12" r="10"/><path d="M12 6v6h4"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>',
+    sprout: '<path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"/><path d="M5 21h14"/>',
+    'flower-2': '<path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"/><circle cx="12" cy="8" r="2"/><path d="M12 10v12"/><path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z"/><path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z"/>',
+    droplet: '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+    'tree-deciduous': '<path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.03V6a3 3 0 1 1 6 0v.04a3.5 3.5 0 0 1 3.24 5.65A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/>',
+    feather: '<path d="M14.086 18.412A2 2 0 0112.67 19H5v-7.672a2 2 0 01.586-1.414L11.75 3.75a6 6 0 118.49 8.49z"/><path d="M16 8 2 22"/><path d="M17.488 15H9"/>',
+    'rotate-ccw': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    download: '<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+    lollipop: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 11a2 2 0 0 0 4 0 4 4 0 0 0-8 0 6 6 0 0 0 12 0"/>',
+    martini: '<path d="M12 12 4.207 4.207A.707.707 0 0 1 4.707 3h14.586a.707.707 0 0 1 .5 1.207z"/><path d="M12 12v10"/><path d="M7 22h10"/>',
+    'chevron-left': '<path d="m15 18-6-6 6-6"/>', 'chevron-right': '<path d="m9 18 6-6-6-6"/>', check: '<path d="M20 6 9 17l-5-5"/>',
+    'bottle-wine': '<path d="M10 3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a6 6 0 0 0 1.2 3.6l.6.8A6 6 0 0 1 17 13v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-8a6 6 0 0 1 1.2-3.6l.6-.8A6 6 0 0 0 10 5z"/><path d="M17 13h-4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h4"/>',
+  };
+  const ico = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n] || ''}</svg>`;
+
+  /* ---------- dummy data (shaped after Scento Perfume API answers) ---------- */
+  const FAM = {
+    'Sunlit Citrus': ['시트러스', 'var(--fam-citrus)', 'citrus'], 'Orchard Fruit': ['과일', 'var(--fam-fruit)', 'cherry'],
+    'Green Leaf': ['그린·차', 'var(--fam-green)', 'leaf'], 'Petal Garden': ['꽃', 'var(--fam-petal)', 'flower-2'],
+    'White Bloom': ['하얀 꽃', 'var(--fam-white)', 'flower-2'], 'Powder Veil': ['파우더리', 'var(--fam-powder)', 'feather'],
+    'Spice Route': ['스파이스', 'var(--fam-spice)', 'flame'], 'Wood & Root': ['우디', 'var(--fam-wood)', 'tree-deciduous'],
+    'Smoke & Leather': ['스모키', 'var(--fam-smoke)', 'flame'], 'Amber & Resin': ['앰버', 'var(--fam-amber)', 'sun'],
+    'Velvet Sweet': ['달콤함', 'var(--fam-sweet)', 'candy'], 'Skin Musk': ['살냄새', 'var(--fam-musk)', 'droplet'],
+  };
+  const WHEEL_ORDER = ['Sunlit Citrus', 'Green Leaf', 'Orchard Fruit', 'Petal Garden', 'White Bloom', 'Powder Veil', 'Skin Musk', 'Velvet Sweet', 'Amber & Resin', 'Spice Route', 'Smoke & Leather', 'Wood & Root'];
+  const NOTE = {
+    Coffee: ['커피', '에스프레소 한 샷', 'Velvet Sweet', 43], Vanilla: ['바닐라', '바닐라 시럽 한 바퀴', 'Velvet Sweet', 582],
+    Milk: ['우유', '데운 우유 거품', 'Velvet Sweet', 7], Tea: ['차', '따뜻하게 우린 찻잎', 'Green Leaf', 42],
+    Bergamot: ['베르가못', '얼그레이 속 상큼한 껍질', 'Sunlit Citrus', 310], Lemon: ['레몬', '갓 짠 레몬즙', 'Sunlit Citrus', 230],
+    Orange: ['오렌지', '손으로 깐 귤 껍질', 'Sunlit Citrus', 260], Grapefruit: ['자몽', '쌉싸름한 자몽 과육', 'Sunlit Citrus', 140],
+    Fig: ['무화과', '잘 익은 무화과 속살', 'Orchard Fruit', 33], Peach: ['복숭아', '말랑한 복숭아 과즙', 'Orchard Fruit', 92],
+    Pear: ['배', '아삭한 배 한 조각', 'Orchard Fruit', 70], Cherry: ['체리', '새콤한 체리', 'Orchard Fruit', 45],
+    Coconut: ['코코넛', '코코넛 밀크', 'Velvet Sweet', 60], Almond: ['아몬드', '구운 아몬드 크림', 'Velvet Sweet', 51],
+    Pistachio: ['피스타치오', '고소한 피스타치오 크림', 'Velvet Sweet', 8], Caramel: ['캐러멜', '살짝 탄 설탕', 'Velvet Sweet', 96],
+    Chocolate: ['초콜릿', '다크 초콜릿 한 조각', 'Velvet Sweet', 38], Honey: ['꿀', '토스트 위 꿀 한 스푼', 'Velvet Sweet', 88],
+    'Tonka Bean': ['통카빈', '아몬드 닮은 달콤한 콩', 'Velvet Sweet', 160], Praline: ['프랄린', '견과 캐러멜 사탕', 'Velvet Sweet', 70],
+    Whisky: ['위스키', '오크통에서 익은 위스키', 'Velvet Sweet', 3], Cinnamon: ['시나몬', '시나몬롤 위 가루', 'Spice Route', 74],
+    Nutmeg: ['넛멕', '뱅쇼에 넣는 향신료', 'Spice Route', 70], Cardamom: ['카다멈', '짜이 티 속 향신료', 'Spice Route', 110],
+    Ginger: ['생강', '알싸한 생강차', 'Spice Route', 90], Rose: ['장미', '장미 꽃잎 한 장', 'Petal Garden', 410],
+    'Floral notes': ['꽃 향', '꽃다발 첫 향', 'Petal Garden', 200], 'White Flowers': ['하얀 꽃', '하얀 꽃 한 줌', 'White Bloom', 120],
+    'Lily of the valley': ['은방울꽃', '맑은 비누', 'White Bloom', 80], Iris: ['아이리스', '분첩 속 파우더', 'Powder Veil', 150],
+    Lavender: ['라벤더', '햇볕에 말린 이불', 'Green Leaf', 140], Musk: ['머스크', '갓 빤 하얀 빨래', 'Skin Musk', 520],
+    Amber: ['앰버', '햇볕에 데운 담요', 'Amber & Resin', 300], Benzoin: ['벤조인', '바닐라 닮은 나무 수지', 'Amber & Resin', 90],
+    Cedarwood: ['시더우드', '연필 깎은 냄새', 'Wood & Root', 280], Sandalwood: ['샌달우드', '크리미한 나무', 'Wood & Root', 260],
+    Vetiver: ['베티버', '비 온 뒤 흙', 'Wood & Root', 190], Tobacco: ['토바코', '말린 담뱃잎', 'Smoke & Leather', 60],
+  };
+  const DUR = { EDC: ['오 드 코롱', 'short', '1–2시간'], EDT: ['오 드 뚜왈렛', 'mid', '3–4시간'], EDP: ['오 드 퍼퓸', 'long', '5–6시간'], Extrait: ['엑스트레 드 퍼퓸', 'xlong', '7시간 이상'] };
+
+  const PERFUMES = [
+    { id: 'black-opium', name: 'Black Opium', house: 'Yves Saint Laurent', fam: 'Velvet Sweet', conc: 'EDP', pyr: null, notes: ['Coffee', 'White Flowers', 'Vanilla'], sig: ['Coffee', 'Vanilla'], seasons: ['가을', '겨울'], hours: ['저녁', '밤'], words: ['달콤함', '따뜻함', '플로럴', '크리미'], line: '커피와 하얀 꽃을 부드럽고 달콤한 바닐라가 감싸요.' },
+    { id: 'intense-cafe', name: 'Intense Cafe', house: 'Montale', fam: 'Petal Garden', conc: 'EDP', pyr: { top: ['Floral notes'], heart: ['Rose', 'Coffee'], base: ['Amber', 'Vanilla', 'Musk'] }, sig: ['Coffee', 'Rose'], seasons: ['가을', '겨울'], hours: ['저녁'], words: ['로맨틱', '따뜻함', '달콤함'], line: '장미 꽃잎 위로 진한 커피가 내려앉고, 바닐라와 머스크가 오래 남아요.' },
+    { id: 'khamrah-qahwa', name: 'Khamrah Qahwa', house: 'Lattafa', fam: 'Velvet Sweet', conc: 'EDP', pyr: { top: ['Cinnamon', 'Cardamom', 'Ginger'], heart: ['Praline', 'White Flowers'], base: ['Vanilla', 'Coffee', 'Tonka Bean', 'Benzoin', 'Musk'] }, sig: ['Coffee', 'Cardamom'], seasons: ['겨울'], hours: ['저녁', '밤'], words: ['스파이시', '달콤함', '진함'], line: '향신료를 넣은 아랍식 커피에 달콤한 프랄린을 곁들인 느낌이에요.' },
+    { id: 'intoxicated', name: 'Intoxicated', house: 'Kilian Paris', fam: 'Velvet Sweet', conc: 'EDP', pyr: { top: ['Cardamom', 'Coffee'], heart: ['Cinnamon', 'Nutmeg'], base: ['Vanilla', 'Tonka Bean'] }, sig: ['Coffee', 'Cinnamon'], seasons: ['가을', '겨울'], hours: ['저녁'], words: ['따뜻함', '스파이시', '중독적'], line: '카다멈 커피로 시작해 시나몬과 바닐라로 따뜻하게 마무리돼요.' },
+    { id: 'chocolate-greedy', name: 'Chocolate Greedy', house: 'Montale', fam: 'Velvet Sweet', conc: 'EDP', pyr: { top: ['Coffee', 'Orange'], heart: ['Chocolate', 'Tonka Bean'], base: ['Vanilla', 'Musk'] }, sig: ['Chocolate', 'Coffee'], seasons: ['겨울'], hours: ['낮', '저녁'], words: ['디저트', '달콤함', '포근함'], line: '오렌지 껍질을 올린 초콜릿 케이크 한 조각 같은 향이에요.' },
+    { id: 'wulong-cha', name: 'Wūlóng Chá', house: 'Nishane', fam: 'Green Leaf', conc: 'Extrait', pyr: { top: ['Bergamot', 'Orange', 'Lemon'], heart: ['Tea', 'Nutmeg'], base: ['Musk', 'Fig'] }, sig: ['Tea', 'Bergamot'], seasons: ['봄', '여름'], hours: ['낮'], words: ['상쾌함', '차분함', '깨끗함'], line: '상큼한 시트러스 뒤로 우롱차와 무화과가 맑게 이어져요.' },
+    { id: 'the-noir-29', name: 'Thé Noir 29', house: 'Le Labo', fam: 'Green Leaf', conc: 'EDP', pyr: null, notes: ['Fig', 'Bergamot', 'Tea', 'Tobacco', 'Cedarwood', 'Musk'], sig: ['Tea', 'Fig'], seasons: ['가을'], hours: ['낮', '저녁'], words: ['차분함', '스모키', '우디'], line: '홍차 잎과 무화과에 말린 담뱃잎과 나무 향이 겹쳐요.' },
+    { id: 'philosykos', name: 'Philosykos', house: 'Diptyque', fam: 'Orchard Fruit', conc: 'EDT', pyr: { top: ['Fig'], heart: ['Fig', 'Coconut'], base: ['Cedarwood', 'Musk'] }, sig: ['Fig'], seasons: ['봄', '여름'], hours: ['낮'], words: ['초록빛', '밀키', '자연스러움'], line: '무화과 잎과 열매를 통째로 담은 듯 초록빛이고 우유처럼 부드러워요.' },
+    { id: 'pistachio-gelato', name: 'Yum Pistachio Gelato 33', house: 'Kayali', fam: 'Velvet Sweet', conc: 'EDP', pyr: { top: ['Pistachio', 'Almond'], heart: ['Milk', 'Caramel'], base: ['Vanilla', 'Musk'] }, sig: ['Pistachio', 'Milk'], seasons: ['봄', '여름'], hours: ['낮'], words: ['고소함', '달콤함', '귀여움'], line: '피스타치오 젤라토에 캐러멜 소스를 살짝 두른 느낌이에요.' },
+    { id: 'colonia', name: 'Colonia', house: 'Acqua di Parma', fam: 'Sunlit Citrus', conc: 'EDC', pyr: { top: ['Lemon', 'Bergamot', 'Orange'], heart: ['Lavender', 'Rose'], base: ['Vetiver', 'Sandalwood'] }, sig: ['Lemon', 'Bergamot'], seasons: ['봄', '여름'], hours: ['낮'], words: ['상쾌함', '클래식', '깔끔함'], line: '갓 짠 레몬과 베르가못이 시원하게 퍼지고 가볍게 사라져요.' },
+    { id: 'nectarine-honey', name: 'Nectarine Blossom & Honey', house: 'Jo Malone London', fam: 'Orchard Fruit', conc: 'EDC', pyr: { top: ['Peach'], heart: ['Honey', 'White Flowers'], base: ['Musk'] }, sig: ['Peach', 'Honey'], seasons: ['봄', '여름'], hours: ['낮'], words: ['과즙', '산뜻함', '밝음'], line: '말랑한 복숭아에 꿀을 한 스푼 떨어뜨린 맑은 향이에요.' },
+    { id: 'angels-share', name: "Angels' Share", house: 'Kilian Paris', fam: 'Velvet Sweet', conc: 'EDP', pyr: { top: ['Whisky'], heart: ['Cinnamon', 'Tonka Bean'], base: ['Praline', 'Vanilla', 'Sandalwood'] }, sig: ['Whisky', 'Cinnamon'], seasons: ['가을', '겨울'], hours: ['저녁', '밤'], words: ['따뜻함', '달콤함', '어른스러움'], line: '오크통 속 위스키에 시나몬을 뿌린 애플파이 같은 향이에요.' },
+    { id: 'lazy-sunday', name: 'Lazy Sunday Morning', house: 'Maison Margiela Replica', fam: 'Skin Musk', conc: 'EDT', pyr: { top: ['Pear', 'Lily of the valley'], heart: ['Iris', 'Rose'], base: ['Musk'] }, sig: ['Musk', 'Pear'], seasons: ['봄', '여름', '가을'], hours: ['낮'], words: ['살냄새', '깨끗함', '포근함'], line: '햇볕에 말린 하얀 시트 위에서 늦잠 자는 일요일 아침 같아요.' },
+    { id: 'paradis-grapefruit', name: 'Pamplelune', house: 'Guerlain', fam: 'Sunlit Citrus', conc: 'EDT', pyr: { top: ['Grapefruit', 'Bergamot'], heart: ['Cherry', 'Rose'], base: ['Vanilla', 'Vetiver'] }, sig: ['Grapefruit'], seasons: ['여름'], hours: ['낮'], words: ['쌉싸름함', '상큼함', '활기'], line: '자몽 껍질을 비틀었을 때 나는 쌉싸름하고 시원한 향이에요.' },
+  ];
+  PERFUMES.forEach(p => { p.all = p.pyr ? [...new Set([...p.pyr.top, ...p.pyr.heart, ...p.pyr.base])] : p.notes; });
+
+  /* foods: ingredient -> note; null = an ingredient perfume rarely uses */
+  const F = (id, cat, icon, nm, ing, alias = '') => ({ id, cat, icon, nm, ing, alias });
+  const FOODS = [
+    F('latte', '커피·차', 'coffee', '바닐라라떼', [['에스프레소', 'Coffee'], ['우유', 'Milk'], ['바닐라 시럽', 'Vanilla']], '라떼 커피'),
+    F('americano', '커피·차', 'coffee', '아메리카노', [['에스프레소', 'Coffee']], '커피'),
+    F('mocha', '커피·차', 'coffee', '카페모카', [['에스프레소', 'Coffee'], ['초콜릿', 'Chocolate'], ['우유', 'Milk']], '라떼 커피 초코'),
+    F('coconutcoffee', '커피·차', 'coffee', '코코넛 커피', [['에스프레소', 'Coffee'], ['코코넛 밀크', 'Coconut']], '커피 스무디'),
+    F('earlgrey', '커피·차', 'leaf', '얼그레이', [['홍차', 'Tea'], ['베르가못', 'Bergamot']], '홍차 티'),
+    F('matcha', '커피·차', 'leaf', '말차라떼', [['말차', 'Tea'], ['우유', 'Milk']], '녹차 라떼'),
+    F('milktea', '커피·차', 'milk', '밀크티', [['홍차', 'Tea'], ['우유', 'Milk'], ['설탕 시럽', null]], '버블티 홍차'),
+    F('chai', '커피·차', 'flame', '짜이 티', [['홍차', 'Tea'], ['카다멈', 'Cardamom'], ['시나몬', 'Cinnamon'], ['우유', 'Milk']], '차이 라떼'),
+    F('gingertea', '커피·차', 'flame', '꿀 생강차', [['생강', 'Ginger'], ['꿀', 'Honey']], '차'),
+    F('lemonade', '음료', 'citrus', '레몬에이드', [['레몬', 'Lemon'], ['탄산수', null]], '에이드'),
+    F('grapefruitade', '음료', 'citrus', '자몽에이드', [['자몽', 'Grapefruit'], ['탄산수', null]], '에이드'),
+    F('orangejuice', '음료', 'citrus', '오렌지 주스', [['오렌지', 'Orange']], '주스'),
+    F('choco', '디저트', 'cake-slice', '초코 케이크', [['초콜릿', 'Chocolate'], ['바닐라', 'Vanilla'], ['밀가루', null]], '케이크'),
+    F('figtart', '디저트', 'cake', '무화과 타르트', [['무화과', 'Fig'], ['아몬드 크림', 'Almond'], ['버터', null]], '타르트 파이'),
+    F('tiramisu', '디저트', 'cake', '티라미수', [['에스프레소', 'Coffee'], ['코코아', 'Chocolate'], ['마스카포네', 'Milk']], '케이크 커피'),
+    F('pistachio', '디저트', 'lollipop', '피스타치오 젤라또', [['피스타치오', 'Pistachio'], ['우유', 'Milk']], '아이스크림'),
+    F('vanillaice', '디저트', 'lollipop', '바닐라 아이스크림', [['바닐라빈', 'Vanilla'], ['우유', 'Milk']], '아이스크림'),
+    F('popcorn', '디저트', 'popcorn', '캐러멜 팝콘', [['캐러멜', 'Caramel'], ['옥수수', null]], '간식'),
+    F('cinnamonroll', '디저트', 'croissant', '시나몬롤', [['시나몬', 'Cinnamon'], ['캐러멜', 'Caramel'], ['빵', null]], '빵 베이커리'),
+    F('honeytoast', '디저트', 'sandwich', '허니 토스트', [['꿀', 'Honey'], ['식빵', null], ['버터', null]], '빵'),
+    F('rosemacaron', '디저트', 'cookie', '장미 마카롱', [['아몬드 가루', 'Almond'], ['장미 시럽', 'Rose']], '쿠키 마카롱'),
+    F('coconutcookie', '디저트', 'cookie', '코코넛 쿠키', [['코코넛', 'Coconut'], ['바닐라', 'Vanilla']], '쿠키'),
+    F('fig', '과일', 'grape', '생무화과', [['무화과', 'Fig']], '과일'),
+    F('peach', '과일', 'apple', '복숭아', [['복숭아', 'Peach']], '과일'),
+    F('pear', '과일', 'apple', '배', [['배', 'Pear']], '과일'),
+    F('cherry', '과일', 'cherry', '체리', [['체리', 'Cherry']], '과일'),
+    F('mandarin', '과일', 'citrus', '귤', [['귤 껍질', 'Orange']], '과일 감귤'),
+    F('highball', '술', 'glass-water', '하이볼', [['위스키', 'Whisky'], ['레몬', 'Lemon'], ['탄산수', null]], '칵테일'),
+    F('whisky', '술', 'martini', '위스키 온더록', [['위스키', 'Whisky']], '술'),
+    F('vinchaud', '술', 'wine', '뱅쇼', [['오렌지', 'Orange'], ['시나몬', 'Cinnamon'], ['넛멕', 'Nutmeg'], ['레드와인', null]], '와인'),
+  ];
+  const CATS = ['전체', '커피·차', '음료', '디저트', '과일', '술'];
+  const PRESETS = [['포근한 디저트파', ['latte', 'choco', 'earlgrey']], ['상큼한 하이볼파', ['lemonade', 'highball']], ['과즙 가득 과일파', ['fig', 'peach']], ['향신료 티타임파', ['chai', 'cinnamonroll']]];
+
+  /* ---------- state ---------- */
+  const DEFAULT_PICK = ['latte', 'choco', 'earlgrey'];
+  const S = { picked: [...DEFAULT_PICK], cat: '전체', q: '', wish: new Set(['wulong-cha', 'intense-cafe']), detail: 'intense-cafe', from: 'results',
+              fam: 'Velvet Sweet', ex: { notes: ['Coffee', 'Vanilla'], layer: 'any', dur: [] },
+              history: [{ kind: 'food', items: ['latte', 'choco', 'earlgrey'], when: '오늘' }, { kind: 'food', items: ['fig', 'peach'], when: '3일 전' }, { kind: 'expert', items: ['Tea', 'Bergamot'], when: '지난주' }] };
+  try { const saved = JSON.parse(localStorage.getItem('proto-me') || 'null'); if (saved) { S.wish = new Set(saved.wish); S.history = saved.history; } } catch {}
+  const save = () => { try { localStorage.setItem('proto-me', JSON.stringify({ wish: [...S.wish], history: S.history })); } catch {} };
+  function record(kind, items) {
+    const key = kind + ':' + items.join(',');
+    S.history = [{ kind, items: [...items], when: '방금' }, ...S.history.filter(h => h.kind + ':' + h.items.join(',') !== key)].slice(0, 8);
+    save();
+  }
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const noteKo = n => (NOTE[n] || [n])[0];
+  const noteFam = n => (NOTE[n] || [])[2] || 'Velvet Sweet';
+  const noteColor = n => FAM[noteFam(n)][1];
+  const famChip = f => `<span class="badge fam" style="background:${FAM[f][1]}">${FAM[f][0]}</span>`;
+  const food = id => FOODS.find(f => f.id === id);
+  const perfume = id => PERFUMES.find(p => p.id === id);
+  const foodColor = f => noteColor((f.ing.find(i => i[1]) || [, 'Vanilla'])[1]);
+  function fillIcons(root = document) { root.querySelectorAll('[data-ico]').forEach(el => { if (!el.dataset.done) { el.insertAdjacentHTML('afterbegin', ico(el.dataset.ico)); el.dataset.done = 1; } }); }
+
+  /* ---------- scoring ---------- */
+  const weight = n => 1 / Math.log2(2 + ((NOTE[n] || [])[3] || 100));
+  function score(p, wanted, layer = 'any') {
+    if (layer !== 'any' && !p.pyr) return null;
+    const pool = layer === 'any' ? p.all : p.pyr[layer];
+    const hit = wanted.filter(n => pool.includes(n));
+    if (!hit.length) return null;
+    const total = wanted.reduce((a, n) => a + weight(n), 0);
+    const got = hit.reduce((a, n) => a + weight(n) * (p.sig.includes(n) ? 1.4 : 1), 0);
+    return { pct: Math.min(98, Math.round(got / total * 100)), hit };
+  }
+  function pickedNotes(ids = S.picked) {
+    const m = new Map();
+    ids.forEach(id => food(id).ing.forEach(([, n]) => { if (n) m.set(n, [...(m.get(n) || []), food(id).nm]); }));
+    return m;
+  }
+  function foodResults(ids = S.picked) {
+    const notes = [...pickedNotes(ids).keys()];
+    const foods = ids.map(food).filter(f => f.ing.some(i => i[1]));
+    return PERFUMES.map(p => {
+      const s = score(p, notes);
+      if (!s) return { p, s };
+      const cov = foods.filter(f => f.ing.some(([, n]) => n && s.hit.includes(n))).length / Math.max(1, foods.length);
+      return { p, s: { ...s, pct: Math.min(98, Math.round(100 * (0.45 * cov + 0.55 * s.pct / 100))) } };
+    }).filter(x => x.s).sort((a, b) => b.s.pct - a.s.pct);
+  }
+  function persona(list) {
+    const fam = list[0] ? list[0].p.fam : 'Velvet Sweet';
+    return ({ 'Velvet Sweet': '포근한 디저트파', 'Green Leaf': '차분한 티타임파', 'Sunlit Citrus': '상큼한 에이드파', 'Orchard Fruit': '과즙 가득 과일파', 'Petal Garden': '로맨틱 꽃다발파', 'Skin Musk': '깨끗한 살냄새파', 'Spice Route': '따뜻한 향신료파' })[fam] || '나만의 조합파';
+  }
+
+  /* ---------- shared bits ---------- */
+  function appbar(on) {
+    const L = [['home', '홈', 'compass'], ['food', '음식으로 찾기', 'coffee'], ['expert', '전문가 모드', 'flask-conical'], ['me', '나의 향', 'sprout']];
+    return `<div class="appbar"><a class="brand" href="#home">${ico('bottle-wine')}향 아카이브</a>
+      <nav>${L.map(([s, t]) => `<a href="#${s}" class="${s === on ? 'on' : ''}">${t}</a>`).join('')}</nav></div>`;
+  }
+  function tabbar(on) {
+    const L = [['home', '홈', 'compass'], ['food', '음식', 'coffee'], ['expert', '전문가', 'flask-conical'], ['me', '나의 향', 'sprout']];
+    return L.map(([s, t, i]) => `<a href="#${s}" class="${s === on ? 'on' : ''}">${ico(i)}${t}</a>`).join('');
+  }
+  function ring(pct) {
+    const c = 2 * Math.PI * 23;
+    return `<div class="ring"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="23" fill="none" stroke="var(--muted)" stroke-width="4"/>
+      <circle class="ring-fill" cx="27" cy="27" r="23" fill="none" stroke="var(--primary)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" data-off="${c * (1 - pct / 100)}"/></svg><b>${pct}%</b></div>`;
+  }
+  const animateRings = root => requestAnimationFrame(() => requestAnimationFrame(() => root.querySelectorAll('.ring-fill').forEach(r => r.setAttribute('stroke-dashoffset', r.dataset.off))));
+  function miniBottle(p) {
+    const layers = p.pyr ? [p.pyr.base, p.pyr.heart, p.pyr.top] : [p.all];
+    return `<div class="bottle-mini">${layers.map(l => `<div style="flex:1;background:${noteColor(l[0])}"></div>`).join('')}</div>`;
+  }
+  function itemHTML({ p, s }, foodsMap, i = 0) {
+    const why = foodsMap
+      ? '겹치는 재료 · ' + s.hit.slice(0, 3).map(n => `${noteKo(n)}(${foodsMap.get(n).join('·')})`).join(', ') + (s.hit.length > 3 ? ` 외 ${s.hit.length - 3}개` : '')
+      : `${s.hit.map(noteKo).join(', ')} · ${DUR[p.conc][0]} ${DUR[p.conc][2]}`;
+    return `<div class="card p-item pop" style="--i:${i}" data-open="${p.id}" data-component="Card">${ring(s.pct)}
+      <div class="p-main"><div class="nm">${esc(p.name)}</div><div class="row small muted" style="gap:6px;margin-top:2px">${esc(p.house)} ${famChip(p.fam)}</div><div class="why">${esc(why)}</div></div>
+      <button class="iconbtn" data-wish="${p.id}" aria-pressed="${S.wish.has(p.id)}" aria-label="관심 향수에 담기">${ico('heart')}</button></div>`;
+  }
+  function toast(sec, msg) { const el = $(`#toast-${sec}`) || $('#toast-share'); el.textContent = msg; el.hidden = false; clearTimeout(el._t); el._t = setTimeout(() => el.hidden = true, 1800); }
+
+  /* ---------- home ---------- */
+  function renderHome() {
+    $('#home-presets').innerHTML = PRESETS.map(([nm, ids]) => `<button class="chip" data-preset="${ids.join(',')}">${ids.map(id => ico(food(id).icon)).join('')}${nm}</button>`).join('');
+    const orbs = [['var(--fam-sweet)', 150, '18%', '8%', 'coffee'], ['var(--fam-green)', 120, '52%', '0%', 'leaf'], ['var(--fam-petal)', 110, '38%', '46%', 'flower-2'], ['var(--fam-citrus)', 86, '70%', '44%', 'citrus']];
+    $('#hero-art').innerHTML = orbs.map(([c, s, l, t, ic], i) => `<span class="orb float" style="background:${c};width:${s}px;height:${s}px;left:${l};top:${t};animation-delay:${i * .8}s">${ico(ic)}</span>`).join('');
+  }
+
+  /* ---------- food finder (one screen) ---------- */
+  function visibleFoods() {
+    const q = S.q.trim();
+    return FOODS.filter(f => (S.cat === '전체' || f.cat === S.cat) && (!q || (f.nm + f.alias + f.ing.map(i => i[0]).join('')).includes(q)));
+  }
+  function renderFood() {
+    $('#food-cats').innerHTML = CATS.map(c => `<button class="chip" data-cat="${c}" aria-pressed="${c === S.cat}">${c}</button>`).join('');
+    const list = visibleFoods(), full = S.picked.length >= 5;
+    $('#food-grid').innerHTML = list.map(f => {
+      const on = S.picked.includes(f.id);
+      return `<button class="food" data-food="${f.id}" aria-pressed="${on}" data-order="${S.picked.indexOf(f.id) + 1}" ${!on && full ? 'disabled' : ''}>
+        <span class="orb" style="background:${foodColor(f)}">${ico(f.icon)}</span><span class="nm">${f.nm}</span><span class="sub">${f.ing.filter(i => i[1]).map(i => i[0]).join(' · ')}</span></button>`;
+    }).join('');
+    const none = !list.length;
+    $('#food-grid').hidden = none; $('#food-none').hidden = !none;
+    if (none) {
+      $('#food-none-title').textContent = `'${S.q}'은(는) 아직 정리되지 않은 음식이에요`;
+      $('#food-none-sugg').innerHTML = FOODS.slice(0, 3).map(f => `<button class="chip" data-food="${f.id}">${ico(f.icon)}${f.nm}</button>`).join('');
+    }
+    if (prototypeShell.getScreen() === 'food') {
+      const st = prototypeShell.getState();
+      if (none && st !== '검색 결과 없음') prototypeShell.setState('검색 결과 없음');
+      if (!none && st !== 'Default') prototypeShell.setState('Default');
+    }
+    renderPanel();
+  }
+  function renderPanel() {
+    const P = $('#food-panel');
+    $('#plate-bar').hidden = !S.picked.length;
+    if (!S.picked.length) {
+      P.innerHTML = `<div class="card stack" style="align-items:center;text-align:center;padding:28px 18px"><span class="orb" style="width:56px;height:56px;background:var(--secondary)">${ico('sprout')}</span>
+        <h3>음식을 고르면 여기에<br>공통 재료가 피어나요</h3><p class="muted small">하나만 골라도 바로 어울리는 향수를 보여 드려요.</p></div>`;
+      return;
+    }
+    const m = pickedNotes(), common = [...m].filter(([, fs]) => fs.length > 1), solo = [...m].filter(([, fs]) => fs.length === 1);
+    const res = foodResults().slice(0, 3);
+    $('#plate-bar').innerHTML = `<div class="stack" style="gap:4px;flex:1;min-width:0"><span class="small" style="opacity:.75">${common.length ? '함께 들어 있는 재료' : '고른 음식의 재료'}</span>
+      <div class="notes">${(common.length ? common : [...m]).map(([n]) => `<span class="note-pill" style="background:${noteColor(n)}">${noteKo(n)}</span>`).join('')}</div></div>
+      <a class="btn" href="#results">향수 ${foodResults().length}개</a>`;
+    P.innerHTML = `<div class="card stack" style="gap:14px">
+        <div class="row between"><span class="eyebrow">My plate</span><span class="small muted">${S.picked.length}/5</span></div>
+        <div class="row">${S.picked.map(id => `<button class="chip" data-food="${id}" aria-label="${food(id).nm} 빼기">${ico(food(id).icon)}${food(id).nm}${ico('x')}</button>`).join('')}</div>
+        <div class="sep"></div>
+        ${common.length ? `<div class="stack" style="gap:8px"><h3>함께 들어 있는 재료</h3><div class="row">${common.map(([n, fs], i) => `<span class="note-pill common pop" style="--i:${i};background:${noteColor(n)}">${ico(FAM[noteFam(n)][2])}${noteKo(n)} <small>${fs.length}개 음식</small></span>`).join('')}</div></div>`
+          : `<p class="small muted">아직 겹치는 재료는 없어요. 음식을 하나 더 고르면 겹치는 재료가 생길 수 있어요.</p>`}
+        ${solo.length ? `<div class="stack" style="gap:8px"><span class="small muted">그 밖의 재료</span><div class="row">${solo.map(([n], i) => `<span class="note-pill pop" style="--i:${i + common.length};background:${noteColor(n)}" title="${NOTE[n][1]}">${noteKo(n)} <small>${NOTE[n][1]}</small></span>`).join('')}</div></div>` : ''}
+      </div>
+      <div class="card stack" style="gap:6px"><div class="row between"><h3>잘 맞는 향수 미리 보기</h3><span class="small muted">${foodResults().length}개</span></div>
+        ${res.map(({ p, s }, i) => `<div class="mini-result pop" style="--i:${i}" data-open="${p.id}">${miniBottle(p)}<div class="p-main"><div class="nm" style="font-size:16px">${esc(p.name)}</div><div class="small muted">${esc(p.house)}</div></div><b class="small">${s.pct}%</b></div>`).join('') || '<p class="small muted">이 재료가 든 향수가 아직 적어요.</p>'}
+        <a class="btn block" href="#results" style="margin-top:6px">추천 향수 전체 보기</a></div>`;
+  }
+
+  function renderResults() {
+    const m = pickedNotes(), list = foodResults();
+    $('#result-foods').innerHTML = S.picked.map(id => `<span class="chip" style="cursor:default">${ico(food(id).icon)}${food(id).nm}</span>`).join('');
+    $('#result-summary').textContent = `재료 ${m.size}가지가 들어간 향수 ${list.length}개를 찾았어요.`;
+    $('#result-list').innerHTML = list.map((x, i) => itemHTML(x, m, i)).join('');
+    animateRings($('#result-list'));
+  }
+
+  /* ---------- expert (scent wheel) ---------- */
+  function arc(cx, cy, r0, r1, a0, a1) {
+    const p = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    const [x0, y0] = p(r1, a0), [x1, y1] = p(r1, a1), [x2, y2] = p(r0, a1), [x3, y3] = p(r0, a0);
+    const large = a1 - a0 > Math.PI ? 1 : 0;
+    return `M${x0} ${y0} A${r1} ${r1} 0 ${large} 1 ${x1} ${y1} L${x2} ${y2} A${r0} ${r0} 0 ${large} 0 ${x3} ${y3}Z`;
+  }
+  function renderWheel() {
+    const n = WHEEL_ORDER.length, step = 2 * Math.PI / n, start = -Math.PI / 2 - step / 2;
+    const picked = f => S.ex.notes.filter(x => noteFam(x) === f).length;
+    $('#wheel').innerHTML = WHEEL_ORDER.map((f, i) => {
+      const a0 = start + i * step, a1 = a0 + step, mid = (a0 + a1) / 2;
+      const tx = 160 + 118 * Math.cos(mid), ty = 160 + 118 * Math.sin(mid), cnt = picked(f);
+      return `<path class="sector ${f === S.fam ? 'on' : ''}" data-fam="${f}" d="${arc(160, 160, 82, 156, a0 + .004, a1 - .004)}" fill="${FAM[f][1]}" ${f === S.fam ? 'style="stroke:#3b2f25;stroke-width:1.5"' : ''}><title>${FAM[f][0]}</title></path>
+        <text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="central">${FAM[f][0]}${cnt ? ` ·${cnt}` : ''}</text>`;
+    }).join('') + `<circle cx="160" cy="160" r="76" fill="var(--card)"/>
+      <text class="center-t" x="160" y="152" text-anchor="middle">${FAM[S.fam][0]}</text>
+      <text class="center-s" x="160" y="176" text-anchor="middle">재료 ${Object.keys(NOTE).filter(k => noteFam(k) === S.fam && k !== 'Floral notes').length}개</text>`;
+  }
+  function renderExpert() {
+    renderWheel();
+    const full = S.ex.notes.length >= 4;
+    const notes = Object.keys(NOTE).filter(k => noteFam(k) === S.fam && k !== 'Floral notes');
+    $('#ex-fam-title').innerHTML = `<span class="dot" style="background:${FAM[S.fam][1]};display:inline-block;margin-right:8px"></span>${FAM[S.fam][0]} 계열`;
+    $('#ex-notes').innerHTML = notes.map(n => {
+      const on = S.ex.notes.includes(n), dis = !on && full;
+      return `<li><label class="${dis ? 'disabled' : ''}"><input type="checkbox" data-exnote="${n}" ${on ? 'checked' : ''} ${dis ? 'disabled' : ''}>
+        <span class="stack" style="gap:0"><span>${noteKo(n)}</span><span class="m">${NOTE[n][1]}</span></span></label></li>`;
+    }).join('');
+    $('#ex-count').textContent = `${S.ex.notes.length}/4`;
+    $('#ex-limit').hidden = !full;
+    $('#ex-picked').innerHTML = S.ex.notes.length
+      ? S.ex.notes.map(n => `<button class="chip" data-exnote-x="${n}" style="background:${noteColor(n)};border-color:transparent;color:#3b2f25">${noteKo(n)}${ico('x')}</button>`).join('')
+      : '<span class="small muted">고른 재료가 여기에 모여요</span>';
+    document.querySelectorAll('#ex-layer button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.ex.layer));
+    document.querySelectorAll('#ex-dur button').forEach(b => b.setAttribute('aria-pressed', S.ex.dur.includes(b.dataset.v)));
+    let list = PERFUMES;
+    if (S.ex.dur.length) list = list.filter(p => S.ex.dur.includes(DUR[p.conc][1]));
+    list = list.map(p => ({ p, s: score(p, S.ex.notes, S.ex.layer) })).filter(x => x.s).sort((a, b) => b.s.pct - a.s.pct);
+    $('#ex-title').textContent = S.ex.notes.length ? `향수 ${list.length}개` : '재료를 골라 주세요';
+    $('#ex-list').innerHTML = S.ex.notes.length ? list.map((x, i) => itemHTML(x, null, i)).join('') : '';
+    animateRings($('#ex-list'));
+    const empty = S.ex.notes.length > 0 && !list.length;
+    if (prototypeShell.getScreen() === 'expert') {
+      const st = prototypeShell.getState();
+      if (empty && st !== '조건에 맞는 향수 없음') prototypeShell.setState('조건에 맞는 향수 없음');
+      if (!empty && st !== 'Default') prototypeShell.setState('Default');
+    }
+  }
+
+  /* ---------- detail ---------- */
+  function renderDetail() {
+    const p = perfume(S.detail);
+    $('#detail-back').setAttribute('href', '#' + S.from);
+    $('#detail-back').lastChild.textContent = ({ results: '추천 목록으로', expert: '전문가 모드로', me: '나의 향으로', food: '음식 고르기로' })[S.from] || '돌아가기';
+    const layers = p.pyr ? [['잔향', p.pyr.base], ['중간 향', p.pyr.heart], ['처음 향', p.pyr.top]] : null;
+    const recipe = p.pyr ? [['처음 향', p.pyr.top], ['중간 향', p.pyr.heart], ['잔향', p.pyr.base]].flatMap(([l, ns]) => ns.map(n => [l, n])) : p.all.map(n => ['', n]);
+    const similar = PERFUMES.filter(o => o.id !== p.id).map(o => ({ o, k: o.all.filter(n => p.all.includes(n)).length + (o.fam === p.fam ? 1 : 0) })).sort((a, b) => b.k - a.k).slice(0, 3);
+    const on = S.wish.has(p.id);
+    $('#detail-body').innerHTML = `<div class="split">
+      <div class="stack" style="gap:16px">
+        <div class="card stack" style="align-items:center;text-align:center;gap:10px">
+          <div class="bottle-wrap"><div class="cap"></div><div class="neck"></div><div class="bottle">${layers
+            ? layers.map(([l, ns], i) => `<div class="bottle-layer" style="--i:${i};background:${noteColor(ns[0])}">${l}</div>`).join('')
+            : `<div class="bottle-layer" style="background:${noteColor(p.all[0])}">전체</div>`}</div></div>
+          <div class="latin" style="font-size:30px;line-height:1.1">${esc(p.name)}</div>
+          <div class="row small muted" style="justify-content:center">${esc(p.house)} ${famChip(p.fam)} <span class="badge">${DUR[p.conc][0]}</span></div>
+          <p style="max-width:360px">${esc(p.line)}</p>
+          <div class="row" style="justify-content:center;width:100%">
+            <button class="btn" style="flex:1;max-width:240px" data-wish="${p.id}" aria-pressed="${on}">${ico('heart')}${on ? '관심 향수에 담겼어요' : '관심 향수에 담기'}</button>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="row between"><span class="muted small">${ico('sun')} 어울리는 계절</span><span>${p.seasons.join(' · ')}</span></div>
+          <div class="row between"><span class="muted small">${ico('moon')} 어울리는 시간</span><span>${p.hours.join(' · ')}</span></div>
+          <div class="row between"><span class="muted small">${ico('clock-3')} 예상 지속 시간</span><span>${DUR[p.conc][2]} <span class="small muted">농도 기준</span></span></div>
+          <div class="sep"></div><div class="row">${p.words.map(w => `<span class="badge">#${w}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="stack" style="gap:16px">
+        <div class="card recipe">
+          <div class="row between"><h2>향 레시피</h2><span class="small muted">${p.pyr ? '뿌린 뒤 시간 순서' : '들어간 재료'}</span></div>
+          ${p.pyr ? '' : '<p class="small muted" style="margin-top:6px">이 향수는 처음·중간·잔향 구분 정보가 없어서 들어간 재료만 보여 드려요.</p>'}
+          <ul style="margin-top:6px">${recipe.map(([l, n]) => `<li>${l ? `<span class="layer-tag">${l}</span>` : ''}<span class="orb" style="background:${noteColor(n)}">${ico(FAM[noteFam(n)][2])}</span>
+            <span style="flex:1"><b style="font-weight:500">${noteKo(n)}</b><br><span class="muted small">${NOTE[n] ? NOTE[n][1] : ''}</span></span>${p.sig.includes(n) ? '<span class="badge">핵심</span>' : ''}</li>`).join('')}</ul>
+        </div>
+        <div class="card stack"><h3>비슷한 향수</h3>
+          ${similar.map(({ o }) => `<div class="mini-result" data-open="${o.id}">${miniBottle(o)}<div class="p-main"><div class="nm" style="font-size:16px">${esc(o.name)}</div><div class="small muted">${esc(o.house)}</div></div>${famChip(o.fam)}</div>`).join('')}
+        </div>
+        <p class="small muted" style="text-align:center">향수 정보 출처: Scento</p>
+      </div></div>`;
+  }
+
+  /* ---------- my scent ---------- */
+  function renderMe() {
+    const B = $('#me-body');
+    if (!S.history.length && !S.wish.size) { B.innerHTML = ''; return; }
+    const counts = new Map(), famCount = new Map();
+    S.history.forEach(h => (h.kind === 'food' ? [...pickedNotes(h.items).keys()] : h.items).forEach(n => counts.set(n, (counts.get(n) || 0) + 1)));
+    [...S.wish].map(perfume).forEach(p => p.sig.forEach(n => counts.set(n, (counts.get(n) || 0) + 1)));
+    counts.forEach((c, n) => famCount.set(noteFam(n), (famCount.get(noteFam(n)) || 0) + c));
+    const top = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5), max = top[0] ? top[0][1] : 1;
+    const famTotal = [...famCount.values()].reduce((a, b) => a + b, 0) || 1, fams = [...famCount].sort((a, b) => b[1] - a[1]);
+    B.innerHTML = `<div class="grid2">
+      <div class="card stack" style="gap:14px">
+        <div class="row between"><h2>탐색 성향</h2><span class="badge">찾아본 기록 기준</span></div>
+        <p class="small muted">찾아본 음식·재료와 관심 향수에 자주 나온 재료예요. 실제로 써 본 경험과는 달라요.</p>
+        <div class="stack" style="gap:10px">${top.map(([n, c]) => `<div class="stack" style="gap:4px"><div class="row between small"><span>${noteKo(n)} <span class="muted">${NOTE[n] ? NOTE[n][1] : ''}</span></span><span class="muted">${c}회</span></div><div class="bar"><i style="width:${c / max * 100}%;background:${noteColor(n)}"></i></div></div>`).join('')}</div>
+        <div class="sep"></div>
+        <span class="small muted">끌리는 계열</span>
+        <div class="stack-bar">${fams.map(([f, c]) => `<span style="flex:${c};background:${FAM[f][1]}" title="${FAM[f][0]}"></span>`).join('')}</div>
+        <div class="row small">${fams.slice(0, 4).map(([f, c]) => `<span class="row" style="gap:4px"><span class="dot" style="background:${FAM[f][1]}"></span>${FAM[f][0]} ${Math.round(c / famTotal * 100)}%</span>`).join('')}</div>
+      </div>
+      <div class="card stack" style="gap:8px">
+        <div class="row between"><h2>최근에 찾은 것</h2><span class="small muted">${S.history.length}개</span></div>
+        ${S.history.map(h => `<div class="hist" data-replay="${h.kind}:${h.items.join(',')}">
+          <span class="orb" style="width:34px;height:34px;background:${h.kind === 'food' ? 'var(--fam-sweet)' : 'var(--fam-powder)'}">${ico(h.kind === 'food' ? 'coffee' : 'flask-conical')}</span>
+          <span style="flex:1"><span>${h.kind === 'food' ? h.items.map(id => food(id).nm).join(' + ') : h.items.map(noteKo).join(' + ')}</span><br><span class="small muted">${h.kind === 'food' ? '음식으로 찾기' : '전문가 모드'} · ${h.when}</span></span>${ico('chevron-right')}</div>`).join('') || '<p class="small muted">아직 기록이 없어요.</p>'}
+      </div></div>
+      <div class="card stack" style="gap:8px">
+        <div class="row between"><h2>관심 향수</h2><span class="small muted">${S.wish.size}개</span></div>
+        ${[...S.wish].map(perfume).map(p => `<div class="mini-result" data-open="${p.id}">${miniBottle(p)}<div class="p-main"><div class="nm" style="font-size:16px">${esc(p.name)}</div><div class="small muted">${esc(p.house)} · ${p.all.slice(0, 3).map(noteKo).join(' · ')}</div></div>
+          <button class="iconbtn" data-wish="${p.id}" aria-pressed="true" aria-label="관심 향수에서 빼기">${ico('heart')}</button></div>`).join('') || '<p class="small muted">하트를 누른 향수가 여기에 모여요.</p>'}
+      </div>
+      <div class="card stack locked" style="gap:8px">
+        <div class="row"><span class="orb" style="width:36px;height:36px;background:var(--secondary)">${ico('lock')}</span><h2>경험 분석</h2><span class="badge">준비 중</span></div>
+        <p class="small muted">향수를 실제로 쓰고 평가를 남기면, 내가 좋게 평가한 재료를 표로 모으고 그 재료의 느낌을 단어로 묶어 내 향 성향을 분석해 드려요. 로그인과 사용 기록 기능이 생기면 열려요.</p>
+      </div>`;
+  }
+
+  /* ---------- share ---------- */
+  function renderShare(received) {
+    const list = foodResults(), top = list[0], fam = top ? top.p.fam : 'Velvet Sweet';
+    $('#share-title').textContent = received ? '친구의 입맛 향수' : '내 입맛 향수 공유';
+    $('#share-card').style.background = FAM[fam][1];
+    $('#share-card').innerHTML = `<span class="blob" style="width:180px;height:180px;right:-50px;top:-60px;background:var(--fam-petal)"></span><span class="blob" style="width:120px;height:120px;left:-40px;bottom:-40px;background:var(--fam-green)"></span>
+      <span class="eyebrow" style="color:#5a4a3c">${received ? '민지 님의' : '나의'} 입맛 향수 유형</span>
+      <div class="type">${persona(list)}</div>
+      <div class="row">${S.picked.map(id => `<span class="orb" style="width:40px;height:40px;background:rgb(255 252 247 / .75)">${ico(food(id).icon)}</span>`).join('')}</div>
+      <div class="small">${S.picked.map(id => food(id).nm).join(' + ')}</div>
+      ${top ? `<div class="inner stack" style="gap:4px"><div class="row between"><span class="small" style="opacity:.75">가장 잘 맞는 향수</span><b>${top.s.pct}%</b></div>
+        <div class="latin" style="font-size:24px;line-height:1.1">${esc(top.p.name)}</div><div class="small">${esc(top.p.house)}</div>
+        <div class="row" style="gap:4px;margin-top:6px">${top.s.hit.map(n => `<span class="badge" style="background:rgb(255 255 255 / .8);color:#2d241c">${noteKo(n)}</span>`).join('')}</div></div>` : ''}
+      <div class="small" style="opacity:.7;position:relative">함께 맞은 향수 ${Math.max(0, list.length - 1)}개 · 향 아카이브</div>`;
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', e => {
+    const t = e.target.closest('button, [data-open], [data-replay], path.sector');
+    if (!t) return;
+    if (t.dataset.wish) { e.stopPropagation(); S.wish.has(t.dataset.wish) ? S.wish.delete(t.dataset.wish) : S.wish.add(t.dataset.wish); save(); rerender(); return; }
+    if (t.dataset.open) { S.from = prototypeShell.getScreen(); S.detail = t.dataset.open; prototypeShell.showScreen('detail'); return; }
+    if (t.dataset.replay) { const [k, items] = t.dataset.replay.split(':'); if (k === 'food') { S.picked = items.split(','); prototypeShell.showScreen('results'); } else { S.ex = { notes: items.split(','), layer: 'any', dur: [] }; S.fam = noteFam(S.ex.notes[0]); prototypeShell.showScreen('expert'); } return; }
+    if (t.dataset.fam) { S.fam = t.dataset.fam; renderExpert(); return; }
+    if (t.dataset.cat) { S.cat = t.dataset.cat; renderFood(); return; }
+    if (t.dataset.food) { const id = t.dataset.food; if (!S.picked.includes(id) && S.picked.length >= 5) return; S.picked = S.picked.includes(id) ? S.picked.filter(x => x !== id) : [...S.picked, id]; if (S.q && !visibleFoods().length) { S.q = ''; $('#food-q').value = ''; } renderFood(); return; }
+    if (t.dataset.preset) { S.picked = t.dataset.preset.split(','); prototypeShell.showScreen('results'); return; }
+    if (t.dataset.exnoteX) { S.ex.notes = S.ex.notes.filter(x => x !== t.dataset.exnoteX); renderExpert(); return; }
+    if (t.closest('#ex-layer')) { S.ex.layer = t.dataset.v; renderExpert(); return; }
+    if (t.closest('#ex-dur')) { const v = t.dataset.v; S.ex.dur = S.ex.dur.includes(v) ? S.ex.dur.filter(x => x !== v) : [...S.ex.dur, v]; renderExpert(); return; }
+    if (t.id === 'ex-reset') { S.ex = { notes: [], layer: 'any', dur: [] }; renderExpert(); return; }
+    if (t.id === 'ex-relax') { S.ex.layer = 'any'; S.ex.dur = []; renderExpert(); return; }
+    if (t.dataset.toast) toast(prototypeShell.getScreen(), t.dataset.toast);
+  });
+  document.addEventListener('change', e => {
+    const n = e.target.dataset && e.target.dataset.exnote;
+    if (!n) return;
+    S.ex.notes = e.target.checked ? [...S.ex.notes, n].slice(0, 4) : S.ex.notes.filter(x => x !== n);
+    renderExpert();
+  });
+  $('#food-q').addEventListener('input', e => { S.q = e.target.value; if (S.q) S.cat = '전체'; renderFood(); });
+
+  function rerender() {
+    const s = prototypeShell.getScreen();
+    ({ results: renderResults, expert: renderExpert, detail: renderDetail, me: renderMe, food: renderFood })[s]?.();
+  }
+
+  /* layout mode follows the stage width so the 390 / 768 presets and real browsers behave the same */
+  function layoutMode() {
+    const w = stage.clientWidth;
+    document.body.classList.toggle('is-narrow', w < 640);
+    document.body.classList.toggle('is-mid', w >= 640 && w < 1000);
+  }
+  new ResizeObserver(layoutMode).observe(stage);
+  addEventListener('resize', layoutMode);
+  vpBtn.addEventListener('click', () => setTimeout(layoutMode));
+  layoutMode();
+
+  let lastLeft = null;
+  window.onScreen = s => {
+    layoutMode();
+    if (lastLeft === 'results' && S.picked.length) record('food', S.picked);
+    if (lastLeft === 'expert' && S.ex.notes.length) record('expert', S.ex.notes);
+    lastLeft = s;
+    document.querySelectorAll(`[data-screen="${s}"] [data-appbar]`).forEach(el => el.innerHTML = appbar(el.dataset.appbar));
+    document.querySelectorAll(`[data-screen="${s}"] [data-tabbar]`).forEach(el => el.innerHTML = tabbar(el.dataset.tabbar));
+    if ((s === 'results' || s === 'share') && !S.picked.length) S.picked = [...DEFAULT_PICK];
+    ({ home: renderHome, food: renderFood, results: renderResults, expert: renderExpert, detail: renderDetail, me: renderMe, share: () => renderShare(false) })[s]?.();
+    fillIcons(current);
+  };
+  let backup = null;
+  window.onState = (s, st) => {
+    if (s === 'detail' && st === '층 정보 없는 향수' && perfume(S.detail).pyr) { S.detail = 'black-opium'; renderDetail(); }
+    if (s === 'me') {
+      if (st === '기록 없음' && (S.history.length || S.wish.size)) { backup = { h: S.history, w: new Set(S.wish) }; S.history = []; S.wish = new Set(); renderMe(); }
+      if (st === 'Default' && backup) { S.history = backup.h; S.wish = backup.w; backup = null; renderMe(); }
+    }
+    if (s === 'expert') {
+      if (st === '조건에 맞는 향수 없음' && !(S.ex.notes.length && $('#ex-title').textContent === '향수 0개')) { S.ex = { notes: ['Whisky', 'Fig'], layer: 'top', dur: ['short'] }; S.fam = 'Velvet Sweet'; renderExpert(); }
+      if (st === 'Default' && $('#ex-title').textContent === '향수 0개') { S.ex = { notes: ['Coffee', 'Vanilla'], layer: 'any', dur: [] }; renderExpert(); }
+    }
+    if (s === 'food') {
+      if (st === '검색 결과 없음' && visibleFoods().length) { S.q = '마라탕'; $('#food-q').value = S.q; renderFood(); }
+      if (st === 'Default' && !visibleFoods().length) { S.q = ''; $('#food-q').value = ''; renderFood(); }
+    }
+    if (s === 'share') renderShare(st === '공유받은 사람 화면');
+    if (current) fillIcons(current);
+  };
+
+  show(location.hash.slice(1));
+</script>
