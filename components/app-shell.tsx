@@ -22,8 +22,11 @@ function activeHref(pathname: string): string | null {
   return null;
 }
 
-/** 모든 화면의 공통 shell: 상단 메뉴(넓은 화면), 하단 탭 메뉴(640px 미만), 내용 폭과 좌우 여백. */
-export function AppShell({ children }: { children: React.ReactNode }) {
+/**
+ * 모든 화면의 공통 shell: 상단 메뉴(넓은 화면), 하단 탭 메뉴(640px 미만), 내용 폭과 좌우 여백.
+ * `account`는 상단 메뉴 오른쪽 끝 자리로, 계정 상태 UI는 상위(app/layout)에서 끼워 넣는다.
+ */
+export function AppShell({ children, account }: { children: React.ReactNode; account?: React.ReactNode }) {
   const active = activeHref(usePathname());
   return (
     <>
@@ -47,6 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
+        {account && <div className="ml-auto flex items-center sm:ml-0">{account}</div>}
       </header>
       <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-5 px-4 pt-5 pb-28 sm:px-6 sm:pb-12">
         {children}
