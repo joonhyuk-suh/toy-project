@@ -9,27 +9,36 @@ Source: `app/globals.css`. Update this section when that source changes.
 
 | Token | Light | Dark |
 | --- | --- | --- |
-| `background` | `oklch(1 0 0)` | `oklch(0.145 0.008 326)` |
-| `foreground` | `oklch(0.145 0.008 326)` | `oklch(0.985 0 0)` |
-| `card` | `oklch(1 0 0)` | `oklch(0.212 0.019 322.12)` |
-| `primary` | `oklch(0.488 0.243 264.376)` | `oklch(0.424 0.199 265.638)` |
-| `primary-foreground` | `oklch(0.97 0.014 254.604)` | `oklch(0.97 0.014 254.604)` |
-| `secondary` | `oklch(0.967 0.001 286.375)` | `oklch(0.274 0.006 286.033)` |
-| `muted` | `oklch(0.96 0.003 325.6)` | `oklch(0.263 0.024 320.12)` |
-| `muted-foreground` | `oklch(0.542 0.034 322.5)` | `oklch(0.711 0.019 323.02)` |
-| `accent` | `oklch(0.96 0.003 325.6)` | `oklch(0.263 0.024 320.12)` |
-| `destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
-| `border` | `oklch(0.922 0.005 325.62)` | `oklch(1 0 0 / 10%)` |
-| `ring` | `oklch(0.711 0.019 323.02)` | `oklch(0.542 0.034 322.5)` |
+| `background` | `#f6f1e9` | `#1d1916` |
+| `foreground` | `#2b2520` | `#f1e9dd` |
+| `card` | `#fffcf7` | `#26211d` |
+| `primary` | `#3d3229` | `#efe3d1` |
+| `primary-foreground` | `#fbf7f0` | `#241e19` |
+| `secondary` | `#efe7db` | `#322b25` |
+| `muted` | `#ece4d7` | `#2e2722` |
+| `muted-foreground` | `#7d7064` | `#a99a8a` |
+| `accent` | `#e6dccd` | `#3a322b` |
+| `destructive` | `#b5533c` | `#d9806a` |
+| `border` | `#e3d8c8` | `#3a322b` |
+| `ring` | `#b8a58f` | `#6d5e50` |
 
-Text roles: `html` uses `font-mono` (JetBrains Mono); `--font-sans` is Inter.
-Radius and spacing: `--radius` is `0.625rem`; Tailwind default spacing scale.
+Scent family colors (`--fam-*`, same in both themes; `--fam-ink` `#3b2f25` is the text color on top of them):
+`citrus` `#ead9a0`, `fruit` `#ecc2b0`, `green` `#c4d1b0`, `floral` `#ebc6cc`, `white` `#efe6d2`, `powder` `#d6cde3`,
+`musk` `#ecd8c8`, `sweet` `#dcc0a3`, `amber` `#e3c48a`, `spice` `#e1b68e`, `smoke` `#b9aea5`, `wood` `#cdb39a`.
+
+Text roles: `font-sans` (body, UI) is Noto Sans KR Variable (Pretendard stand-in); `font-heading` (h1–h3) is Noto Serif KR
+(Arita Buri stand-in); `font-latin` (italic Latin proper names such as perfume names) is Cormorant Garamond italic.
+All three are OFL fonts self-hosted through `@fontsource` packages, imported in `app/layout.tsx`. Pretendard and Arita Buri
+themselves are not bundled; swap them in `app/globals.css` (`--font-sans`, `--font-heading`) when their files are added.
+Radius and spacing: `--radius` is `0.75rem`; Tailwind default spacing scale. Buttons are pill-shaped (`rounded-full`,
+default height `h-10`, `lg` `h-11`). Icons: lucide, thin line (`strokeWidth` about 1.2–1.3).
 
 ## Components
 
 Source: `components/ui`. Update this section when it changes.
 
-- `Button`
+- `Alert`, `Badge`, `Button`, `Card`, `Checkbox`, `Empty`, `Input`, `Separator`, `Toast` (`Toaster`, `toast`), `Toggle`, `ToggleGroup`
+- Project components (not shadcn): `AppShell` in `components/app-shell.tsx`; scent-family atoms (`FamilyOrb`, `FamilyBadge`, `MiniBottle`, `ScoreRing`, `PerfumeCard`, `PerfumeRow`) in `features/perfume/components.tsx`; `ScentWheel` in `features/expert-finder`; `ShareCard` in `features/share`.
 
 ## Rejected patterns
 
