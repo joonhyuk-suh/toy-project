@@ -5,3 +5,5 @@
 - [ui-composition](ui-composition.md) — Read when choosing UI components, page composition, visual tokens, or custom interface boundaries.
 - [visual-identity](visual-identity.md) — Read when choosing fonts, colors, scent family colors, icons, or responsive breakpoints for any screen.
 - [dependency-versions](dependency-versions.md) — Read when upgrading dependencies, pinning versions, or wondering why TypeScript stays on 6.x.
+- [perfume-review](perfume-review.md) — Read when showing community reviews or deciding which reviews are visible to others.
+- [store-data](store-data.md) — Read when finding, showing, or filtering stores that sell perfumes.

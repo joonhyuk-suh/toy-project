@@ -48,3 +48,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 자동 코드 리뷰는 최대 1회, 가장 낮은 강도(`code-review low`)로만 돌린다. 리뷰어를 못 부르면 그 사실만 적고 완료로 본다.
 - 지적 중 스펙의 수용 기준을 깨거나 주 경로가 실제로 깨지는 것만 고친다. 나머지는 `docs/follow-ups/`에 한 줄로 남긴다. 재리뷰는 하지 않는다.
 - 스펙이 요구하지 않은 보안 하드닝·엣지케이스·성능 방어는 범위 밖이다.
+
+<!-- stack-context:kakao:start -->
+# 카카오 (로컬 API, 지도 JavaScript SDK)
+
+- 카카오 로컬 API나 카카오맵 SDK를 다루는 작업을 시작할 때 공식 문서를 그때그때 직접 읽는다. 저장소에 복사본을 두지 않는다.
+  - 로컬 API: https://developers.kakao.com/docs/latest/ko/local/dev-guide
+  - 지도 Web SDK: https://apis.map.kakao.com/web/guide/ (API 레퍼런스: https://apis.map.kakao.com/web/documentation/)
+- 공식 에이전트 스킬과 `llms.txt`는 없다(2026-11-19 확인). 커뮤니티 스킬을 공식 문맥으로 쓰지 않는다.
+- 읽은 문서를 설치된 SDK 로딩 방식과 이 프로젝트의 앱 키 설정에 맞춰 대조한다.
+<!-- stack-context:kakao:end -->
