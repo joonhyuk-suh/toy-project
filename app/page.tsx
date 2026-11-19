@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ArrowUpRightIcon, TriangleIcon } from "lucide-react";
+import { ArrowUpRightIcon, TriangleIcon } from "@phosphor-icons/react/ssr";
 
 import { buttonVariants } from "@/components/ui/button";
 
